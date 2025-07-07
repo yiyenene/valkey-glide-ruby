@@ -3,15 +3,23 @@ PATH
   specs:
     valkey (0.1.0)
       ffi (~> 1.17.0)
+      google-protobuf (~> 4.29.2)
 
 GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.3)
+    bigdecimal (3.2.2)
     date (3.4.1)
     erb (5.0.1)
     ffi (1.17.2)
     ffi (1.17.2-x86_64-linux-gnu)
+    google-protobuf (4.29.5)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.29.5-x86_64-linux)
+      bigdecimal
+      rake (>= 13)
     io-console (0.8.0)
     irb (1.15.2)
       pp (>= 0.6.0)

@@ -14,7 +14,6 @@ require "valkey/commands"
 require "valkey/errors"
 
 class Valkey
-  extend Bindings
   include Commands
 
   def your_pubsub_callback(_client_ptr, kind, msg_ptr, msg_len, chan_ptr, chan_len, pat_ptr, pat_len)
@@ -51,6 +50,7 @@ class Valkey
 
     result = Bindings::CommandResult.new(res)[:response]
 
+    # TODO: handle all types of responses
     case result[:response_type]
     when ResponseType::STRING
       result[:string_value].read_string(result[:string_value_len])

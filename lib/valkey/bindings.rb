@@ -81,6 +81,10 @@ class Valkey
       :pubsub_callback # callback
     ], :pointer        # *const ConnectionResponse
 
+    attach_function :close_client, [
+      :pointer,     # client_adapter_ptr
+    ], :void
+
     attach_function :command, [
       :pointer,     # client_adapter_ptr
       :ulong,       # channel

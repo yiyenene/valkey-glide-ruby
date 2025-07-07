@@ -89,7 +89,7 @@ class Valkey
   end
 
   def close
-    # TODO: handle closing the connection properly
+    Bindings.close_client(@connection)
   end
 
   alias disconnect! close

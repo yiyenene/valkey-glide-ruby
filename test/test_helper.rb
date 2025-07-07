@@ -9,11 +9,11 @@ $VERBOSE = true
 
 PORT        = 6381
 DB          = 15
-TIMEOUT     = Float(ENV['TIMEOUT'] || 1.0)
-LOW_TIMEOUT = Float(ENV['LOW_TIMEOUT'] || 0.01) # for blocking-command tests
+TIMEOUT     = Float(ENV["TIMEOUT"] || 1.0)
+LOW_TIMEOUT = Float(ENV["LOW_TIMEOUT"] || 0.01) # for blocking-command tests
 OPTIONS     = { port: PORT, db: DB, timeout: TIMEOUT }.freeze
 
-Dir[File.expand_path('lint/**/*.rb', __dir__)].sort.each do |f|
+Dir[File.expand_path("lint/**/*.rb", __dir__)].sort.each do |f|
   require f
 end
 
@@ -27,7 +27,8 @@ module Helper
   end
 
   def silent
-    verbose, $VERBOSE = $VERBOSE, false
+    verbose = $VERBOSE
+    $VERBOSE = false
 
     begin
       yield
@@ -39,22 +40,23 @@ module Helper
   class Version
     include Comparable
 
-    attr :parts
+    attr_reader :parts
 
     def initialize(version)
       @parts = case version
-      when Version
-        version.parts
-      else
-        version.to_s.split(".")
-      end
+               when Version
+                 version.parts
+               else
+                 version.to_s.split(".")
+               end
     end
 
     def <=>(other)
       other = Version.new(other)
       length = [parts.length, other.parts.length].max
       length.times do |i|
-        a, b = parts[i], other.parts[i]
+        a = parts[i]
+        b = other.parts[i]
 
         return -1 if a.nil?
         return +1 if b.nil?
@@ -133,26 +135,26 @@ module Helper
     end
 
     def version
-      Version.new(valkey.info['valkey_version'])
+      Version.new(valkey.info["valkey_version"])
     end
 
     def with_acl
       admin = _new_client
-      admin.acl('SETUSER', 'johndoe', 'on',
-                '+ping', '+select', '+command', '+cluster|slots', '+cluster|nodes', '+readonly',
-                '>mysecret')
-      yield('johndoe', 'mysecret')
+      admin.acl("SETUSER", "johndoe", "on",
+                "+ping", "+select", "+command", "+cluster|slots", "+cluster|nodes", "+readonly",
+                ">mysecret")
+      yield("johndoe", "mysecret")
     ensure
-      admin.acl('DELUSER', 'johndoe')
+      admin.acl("DELUSER", "johndoe")
       admin.close
     end
 
     def with_default_user_password
       admin = _new_client
-      admin.acl('SETUSER', 'default', '>mysecret')
-      yield('default', 'mysecret')
+      admin.acl("SETUSER", "default", ">mysecret")
+      yield("default", "mysecret")
     ensure
-      admin.acl('SETUSER', 'default', 'nopass')
+      admin.acl("SETUSER", "default", "nopass")
       admin.close
     end
   end

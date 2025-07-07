@@ -2,6 +2,7 @@
 
 class Valkey
   module Commands
+    # This module contains commands related to strings.
     module Strings
       # Set the string value of a key.
       #
@@ -29,7 +30,7 @@ class Valkey
         args << "GET" if get
 
         if nx || xx
-          send_command(RequestType::SET args, &BoolifySet)
+          send_command(RequestType::SET(args, &BoolifySet))
         else
           send_command(RequestType::SET, args)
         end

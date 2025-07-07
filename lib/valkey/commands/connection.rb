@@ -2,6 +2,7 @@
 
 class Valkey
   module Commands
+    # This module contains commands related to connection management.
     module Connection
       # Authenticate to the server.
       #

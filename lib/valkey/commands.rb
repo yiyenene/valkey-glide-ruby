@@ -11,4 +11,3 @@ class Valkey
     include Server
   end
 end
-

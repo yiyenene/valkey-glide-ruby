@@ -2,6 +2,7 @@
 
 class Valkey
   module Commands
+    # This module contains commands related to server config.
     module Server
       # Asynchronously rewrite the append-only file.
       #

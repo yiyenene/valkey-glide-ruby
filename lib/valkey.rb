@@ -49,7 +49,6 @@ class Valkey
       route.bytesize
     )
 
-
     result = Bindings::CommandResult.new(res)[:response]
 
     case result[:response_type]
@@ -61,7 +60,7 @@ class Valkey
   end
 
   # TODO: use options
-  def initialize(options = {})
+  def initialize(_options = {})
     request = ConnectionRequest::ConnectionRequest.new(
       addresses: [ConnectionRequest::NodeAddress.new(host: "127.0.0.1", port: 6379)]
     )

@@ -10,11 +10,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+    name: Ruby ${{ matrix.ruby }} Valkey ${{ matrix.valkey }}
     strategy:
       matrix:
         ruby:
-          - '3.3.7'
+          - 3.3.7
+        valkey:
+          - 7.0
+          - 7.2.9
+          - 8
 
     services:
       valkey:

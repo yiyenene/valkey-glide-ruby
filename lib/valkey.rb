@@ -60,9 +60,12 @@ class Valkey
   end
 
   # TODO: use options
-  def initialize(_options = {})
+  def initialize(options = {})
+    host = options[:host] || "127.0.0.1"
+    port = options[:port] || 6379
+
     request = ConnectionRequest::ConnectionRequest.new(
-      addresses: [ConnectionRequest::NodeAddress.new(host: "127.0.0.1", port: 6379)]
+      addresses: [ConnectionRequest::NodeAddress.new(host: host, port: port)]
     )
 
     client_type = Bindings::ClientType.new

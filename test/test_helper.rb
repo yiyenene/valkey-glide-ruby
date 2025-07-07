@@ -7,7 +7,7 @@ require "minitest/autorun"
 
 $VERBOSE = true
 
-PORT        = 6381
+PORT        = 6379
 DB          = 15
 TIMEOUT     = Float(ENV["TIMEOUT"] || 1.0)
 LOW_TIMEOUT = Float(ENV["LOW_TIMEOUT"] || 0.01) # for blocking-command tests

@@ -1,8 +1,12 @@
 AllCops:
   TargetRubyVersion: 3.1
+  Exclude:
+    - 'lib/valkey/protobuf/**/*.rb'
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+

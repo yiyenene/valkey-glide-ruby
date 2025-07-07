@@ -11,8 +11,7 @@ class Valkey
       # @return [String] `OK`
       # @see https://redis.io/commands/auth AUTH command
       def auth(*args)
-        # TODO:
-        # send_command([:auth, *args])
+        send_command(RequestType::AUTH, args)
       end
 
       # Ping the server.
@@ -20,8 +19,7 @@ class Valkey
       # @param [optional, String] message
       # @return [String] `PONG`
       def ping(message = nil)
-        # TODO:
-        # send_command([:ping, message].compact)
+        send_command(RequestType::PING, [message].compact)
       end
 
       # Echo the given string.
@@ -29,8 +27,7 @@ class Valkey
       # @param [String] value
       # @return [String]
       def echo(value)
-        # TODO:
-        # send_command([:echo, value])
+        send_command(RequestType::ECHO, [value])
       end
 
       # Change the selected database for the current connection.
@@ -38,8 +35,7 @@ class Valkey
       # @param [Integer] db zero-based index of the DB to use (0 to 15)
       # @return [String] `OK`
       def select(db)
-        # TODO:
-        # send_command(RequestType::SELECT, [db.to_s])
+        send_command(RequestType::SELECT, [db.to_s])
       end
 
       # Close the connection.

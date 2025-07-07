@@ -56,7 +56,7 @@ class Valkey
       #
       # @return [Integer]
       def dbsize
-        send_command([:dbsize])
+        send_command(RequestType::DB_SIZE)
       end
 
       # Remove all keys from all databases.
@@ -65,12 +65,11 @@ class Valkey
       #   - `:async => Boolean`: async flush (default: false)
       # @return [String] `OK`
       def flushall(options = nil)
-        # TODO:
-        # if options && options[:async]
-        #   send_command(%i[flushall async])
-        # else
-        #   send_command([:flushall])
-        # end
+        if options && options[:async]
+          send_command(RequestType::FLUSH_ALL, ["async"])
+        else
+          send_command(RequestType::FLUSH_ALL)
+        end
       end
 
       # Remove all keys from the current database.
@@ -79,12 +78,11 @@ class Valkey
       #   - `:async => Boolean`: async flush (default: false)
       # @return [String] `OK`
       def flushdb(options = nil)
-        # TODO:
-        # if options && options[:async]
-        #   send_command(%i[flushdb async])
-        # else
-        #   send_command([:flushdb])
-        # end
+        if options && options[:async]
+          send_command(RequestType::FLUSH_DB, ["async"])
+        else
+          send_command(RequestType::FLUSH_DB)
+        end
       end
 
       # Get information and statistics about the server.
@@ -186,7 +184,7 @@ class Valkey
       end
 
       def debug(*args)
-        send_command([:debug] + args)
+        send_command(RequestType::DEBUG, args)
       end
     end
   end

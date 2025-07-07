@@ -59,7 +59,6 @@ class Valkey
     end
   end
 
-  # TODO: use options
   def initialize(options = {})
     host = options[:host] || "127.0.0.1"
     port = options[:port] || 6379

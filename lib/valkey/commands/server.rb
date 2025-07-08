@@ -90,7 +90,7 @@ class Valkey
       # @param [String, Symbol] cmd e.g. "commandstats"
       # @return [Hash<String, String>]
       def info(cmd = nil)
-        send_command([:info, cmd].compact) do |reply|
+        send_command(RequestType::INFO, [cmd].compact) do |reply|
           if reply.is_a?(String)
             reply = HashifyInfo.call(reply)
 

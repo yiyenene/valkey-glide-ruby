@@ -50,13 +50,25 @@ class Valkey
 
     result = Bindings::CommandResult.new(res)[:response]
 
-    # TODO: handle all types of responses
-    case result[:response_type]
-    when ResponseType::STRING
-      result[:string_value].read_string(result[:string_value_len])
-    when ResponseType::OK
-      "OK"
-    end
+    convert_response = -> (result) {
+      # TODO: handle all types of responses
+      case result[:response_type]
+      when ResponseType::STRING
+        result[:string_value].read_string(result[:string_value_len])
+      when ResponseType::INT
+        result[:int_value]
+      when ResponseType::FLOAT
+        result[:float_value]
+      when ResponseType::NULL
+        nil
+      when ResponseType::OK
+        "OK"
+      else
+        raise "Unsupported response type: #{result[:response_type]}"
+      end
+    }
+
+    convert_response.call(result)
   end
 
   def initialize(options = {})

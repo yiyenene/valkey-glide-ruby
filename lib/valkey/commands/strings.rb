@@ -154,7 +154,7 @@ class Valkey
       #
       # @see #mset
       def mapped_mset(hash)
-        mset(hash.flatten)
+        mset(*hash.flatten)
       end
 
       # Set one or more values, only if none of the keys exist.
@@ -182,7 +182,7 @@ class Valkey
       #
       # @see #msetnx
       def mapped_msetnx(hash)
-        msetnx(hash.flatten)
+        msetnx(*hash.flatten)
       end
       # Get the value of a key.
       #

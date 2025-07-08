@@ -130,7 +130,7 @@ module Lint
 
     def test_getex
       target_version "6.2" do
-        assert r.setex("foo", 1000, "bar")
+        assert r.set("foo", "bar", ex: 1000)
         assert_equal "bar", r.getex("foo", persist: true)
         assert_equal(-1, r.ttl("foo"))
       end
@@ -296,102 +296,103 @@ module Lint
       assert_equal 5, r.strlen("foo")
     end
 
-      # def test_bitfield
-      #   mock(bitfield: ->(*_) { "*2\r\n:1\r\n:0\r\n" }) do |redis|
-      #     assert_equal [1, 0], redis.bitfield('foo', 'INCRBY', 'i5', 100, 1, 'GET', 'u4', 0)
-      #   end
-      # end
+    # def test_bitfield
+    #   mock(bitfield: ->(*_) { "*2\r\n:1\r\n:0\r\n" }) do |redis|
+    #     assert_equal [1, 0], redis.bitfield('foo', 'INCRBY', 'i5', 100, 1, 'GET', 'u4', 0)
+    #   end
+    # end
 
-      # def test_mget
-      #   r.set('{1}foo', 's1')
-      #   r.set('{1}bar', 's2')
-      #
-      #   assert_equal %w[s1 s2],         r.mget('{1}foo', '{1}bar')
-      #   assert_equal ['s1', 's2', nil], r.mget('{1}foo', '{1}bar', '{1}baz')
-      #   assert_equal ['s1', 's2', nil], r.mget(['{1}foo', '{1}bar', '{1}baz'])
-      # end
+    def test_mget
+      r.set('{1}foo', 's1')
+      r.set('{1}bar', 's2')
+
+      assert_equal %w[s1 s2],         r.mget('{1}foo', '{1}bar')
+      assert_equal ['s1', 's2', nil], r.mget('{1}foo', '{1}bar', '{1}baz')
+      assert_equal ['s1', 's2', nil], r.mget(['{1}foo', '{1}bar', '{1}baz'])
+    end
+
+    def test_mget_mapped
+      r.set('{1}foo', 's1')
+      r.set('{1}bar', 's2')
+
+      response = r.mapped_mget('{1}foo', '{1}bar')
+
+      assert_equal 's1', response['{1}foo']
+      assert_equal 's2', response['{1}bar']
+
+      response = r.mapped_mget('{1}foo', '{1}bar', '{1}baz')
+
+      assert_equal 's1', response['{1}foo']
+      assert_equal 's2', response['{1}bar']
+      assert_nil response['{1}baz']
+    end
+
+    # TODO: pipeline not implmeneted yet
+    # def test_mapped_mget_in_a_pipeline_returns_hash
+    #   r.set('{1}foo', 's1')
+    #   r.set('{1}bar', 's2')
     #
-    #   def test_mget_mapped
-    #     r.set('{1}foo', 's1')
-    #     r.set('{1}bar', 's2')
-    #
-    #     response = r.mapped_mget('{1}foo', '{1}bar')
-    #
-    #     assert_equal 's1', response['{1}foo']
-    #     assert_equal 's2', response['{1}bar']
-    #
-    #     response = r.mapped_mget('{1}foo', '{1}bar', '{1}baz')
-    #
-    #     assert_equal 's1', response['{1}foo']
-    #     assert_equal 's2', response['{1}bar']
-    #     assert_nil response['{1}baz']
+    #   result = r.pipelined do |pipeline|
+    #     pipeline.mapped_mget('{1}foo', '{1}bar')
     #   end
     #
-    #   def test_mapped_mget_in_a_pipeline_returns_hash
-    #     r.set('{1}foo', 's1')
-    #     r.set('{1}bar', 's2')
-    #
-    #     result = r.pipelined do |pipeline|
-    #       pipeline.mapped_mget('{1}foo', '{1}bar')
-    #     end
-    #
-    #     assert_equal({ '{1}foo' => 's1', '{1}bar' => 's2' }, result[0])
-    #   end
-    #
-    #   def test_mset
-    #     r.mset('{1}foo', 's1', '{1}bar', 's2')
-    #
-    #     assert_equal 's1', r.get('{1}foo')
-    #     assert_equal 's2', r.get('{1}bar')
-    #   end
-    #
-    #   def test_mset_mapped
-    #     r.mapped_mset('{1}foo' => 's1', '{1}bar' => 's2')
-    #
-    #     assert_equal 's1', r.get('{1}foo')
-    #     assert_equal 's2', r.get('{1}bar')
-    #   end
-    #
-    #   def test_msetnx
-    #     r.set('{1}foo', 's1')
-    #     assert_equal false, r.msetnx('{1}foo', 's2', '{1}bar', 's3')
-    #     assert_equal 's1', r.get('{1}foo')
-    #     assert_nil r.get('{1}bar')
-    #
-    #     r.del('{1}foo')
-    #     assert_equal true, r.msetnx('{1}foo', 's2', '{1}bar', 's3')
-    #     assert_equal 's2', r.get('{1}foo')
-    #     assert_equal 's3', r.get('{1}bar')
-    #   end
-    #
-    #   def test_msetnx_mapped
-    #     r.set('{1}foo', 's1')
-    #     assert_equal false, r.mapped_msetnx('{1}foo' => 's2', '{1}bar' => 's3')
-    #     assert_equal 's1', r.get('{1}foo')
-    #     assert_nil r.get('{1}bar')
-    #
-    #     r.del('{1}foo')
-    #     assert_equal true, r.mapped_msetnx('{1}foo' => 's2', '{1}bar' => 's3')
-    #     assert_equal 's2', r.get('{1}foo')
-    #     assert_equal 's3', r.get('{1}bar')
-    #   end
-    #
-    #   def test_bitop
-    #     r.set('foo{1}', 'a')
-    #     r.set('bar{1}', 'b')
-    #
-    #     r.bitop(:and, 'foo&bar{1}', 'foo{1}', 'bar{1}')
-    #     assert_equal "\x60", r.get('foo&bar{1}')
-    #
-    #     r.bitop(:and, 'foo&bar{1}', ['foo{1}', 'bar{1}'])
-    #     assert_equal "\x60", r.get('foo&bar{1}')
-    #
-    #     r.bitop(:or, 'foo|bar{1}', 'foo{1}', 'bar{1}')
-    #     assert_equal "\x63", r.get('foo|bar{1}')
-    #     r.bitop(:xor, 'foo^bar{1}', 'foo{1}', 'bar{1}')
-    #     assert_equal "\x03", r.get('foo^bar{1}')
-    #     r.bitop(:not, '~foo{1}', 'foo{1}')
-    #     assert_equal "\x9E".b, r.get('~foo{1}')
-    #   end
+    #   assert_equal({ '{1}foo' => 's1', '{1}bar' => 's2' }, result[0])
+    # end
+  #
+    def test_mset
+      r.mset('{1}foo', 's1', '{1}bar', 's2')
+
+      assert_equal 's1', r.get('{1}foo')
+      assert_equal 's2', r.get('{1}bar')
+    end
+
+    def test_mset_mapped
+      r.mapped_mset('{1}foo' => 's1', '{1}bar' => 's2')
+
+      assert_equal 's1', r.get('{1}foo')
+      assert_equal 's2', r.get('{1}bar')
+    end
+
+    def test_msetnx
+      r.set('{1}foo', 's1')
+      assert_equal false, r.msetnx('{1}foo', 's2', '{1}bar', 's3')
+      assert_equal 's1', r.get('{1}foo')
+      assert_nil r.get('{1}bar')
+
+      r.del('{1}foo')
+      assert_equal true, r.msetnx('{1}foo', 's2', '{1}bar', 's3')
+      assert_equal 's2', r.get('{1}foo')
+      assert_equal 's3', r.get('{1}bar')
+    end
+
+    def test_msetnx_mapped
+      r.set('{1}foo', 's1')
+      assert_equal false, r.mapped_msetnx('{1}foo' => 's2', '{1}bar' => 's3')
+      assert_equal 's1', r.get('{1}foo')
+      assert_nil r.get('{1}bar')
+
+      r.del('{1}foo')
+      assert_equal true, r.mapped_msetnx('{1}foo' => 's2', '{1}bar' => 's3')
+      assert_equal 's2', r.get('{1}foo')
+      assert_equal 's3', r.get('{1}bar')
+    end
+
+    def test_bitop
+      r.set('foo{1}', 'a')
+      r.set('bar{1}', 'b')
+
+      r.bitop(:and, 'foo&bar{1}', 'foo{1}', 'bar{1}')
+      assert_equal "\x60", r.get('foo&bar{1}')
+
+      r.bitop(:and, 'foo&bar{1}', ['foo{1}', 'bar{1}'])
+      assert_equal "\x60", r.get('foo&bar{1}')
+
+      r.bitop(:or, 'foo|bar{1}', 'foo{1}', 'bar{1}')
+      assert_equal "\x63", r.get('foo|bar{1}')
+      r.bitop(:xor, 'foo^bar{1}', 'foo{1}', 'bar{1}')
+      assert_equal "\x03", r.get('foo^bar{1}')
+      r.bitop(:not, '~foo{1}', 'foo{1}')
+      assert_equal "\x9E".b, r.get('~foo{1}')
+    end
   end
 end

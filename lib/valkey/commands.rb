@@ -32,5 +32,11 @@ class Valkey
     #     value
     #   end
     # }
+    HashifyInfo = lambda { |reply|
+      lines = reply.split("\r\n").grep_v(/^(#|$)/)
+      lines.map! { |line| line.split(':', 2) }
+      lines.compact!
+      lines.to_h
+    }
   end
 end

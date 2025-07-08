@@ -32,7 +32,7 @@ class Valkey
       # @return [Integer] the number of bits set to 1
       def bitcount(key, start = 0, stop = -1, scale: nil)
         args = [key, start.to_s, stop.to_s]
-        args << scale if scale
+        args << scale.to_s if scale
         send_command(RequestType::BIT_COUNT, args)
       end
 
@@ -42,12 +42,13 @@ class Valkey
       # @param [String] destkey destination key
       # @param [String, Array<String>] keys one or more source keys to perform `operation`
       # @return [Integer] the length of the string stored in `destkey`
-      # def bitop(operation, destkey, *keys)
-      #   keys.flatten!(1)
-      #   command = [:bitop, operation, destkey]
-      #   command.concat(keys)
-      #   send_command(command)
-      # end
+      def bitop(operation, destkey, *keys)
+        keys.flatten!(1)
+        args = [operation.to_s, destkey]
+        args.concat(keys)
+
+        send_command(RequestType::BIT_OP, args)
+      end
 
       # Return the position of the first bit set to 1 or 0 in a string.
       #

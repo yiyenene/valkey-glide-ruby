@@ -20,7 +20,7 @@ class Valkey
     puts "PubSub received kind=#{kind}, message=#{msg_ptr.read_string(msg_len)}, channel=#{chan_ptr.read_string(chan_len)}, pattern=#{pat_ptr.read_string(pat_len)}"
   end
 
-  def send_command(command_type, command_args = [])
+  def send_command(command_type, command_args = [], &block)
     channel = 0
     route = "" # empty or some serialized route bytes
 
@@ -59,6 +59,16 @@ class Valkey
         result[:int_value]
       when ResponseType::FLOAT
         result[:float_value]
+      when ResponseType::BOOL
+        result[:bool_value]
+      when ResponseType::ARRAY
+        ptr = result[:array_value]
+        count = result[:array_value_len].to_i
+
+        Array.new(count) do |i|
+          item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
+          convert_response.call(item)
+        end
       when ResponseType::NULL
         nil
       when ResponseType::OK
@@ -68,7 +78,13 @@ class Valkey
       end
     }
 
-    convert_response.call(result)
+    response = convert_response.call(result)
+
+    if block_given?
+      block.call(response)
+    else
+      response
+    end
   end
 
   def initialize(options = {})

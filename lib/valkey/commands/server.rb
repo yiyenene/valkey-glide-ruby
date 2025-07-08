@@ -26,13 +26,15 @@ class Valkey
       # @return [String, Hash] string reply, or hash when retrieving more than one
       #   property with `CONFIG GET`
       def config(action, *args)
-        send_command([:config, action] + args) do |reply|
-          if reply.is_a?(Array) && action == :get
-            Hashify.call(reply)
-          else
-            reply
-          end
-        end
+        # TODO:
+
+        # send_command([:config, action] + args) do |reply|
+        #   if reply.is_a?(Array) && action == :get
+        #     Hashify.call(reply)
+        #   else
+        #     reply
+        #   end
+        # end
       end
 
       # Manage client connections.

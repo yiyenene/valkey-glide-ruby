@@ -296,11 +296,9 @@ module Lint
       assert_equal 5, r.strlen("foo")
     end
 
-    # def test_bitfield
-    #   mock(bitfield: ->(*_) { "*2\r\n:1\r\n:0\r\n" }) do |redis|
-    #     assert_equal [1, 0], redis.bitfield('foo', 'INCRBY', 'i5', 100, 1, 'GET', 'u4', 0)
-    #   end
-    # end
+    def test_bitfield
+      assert_equal [1, 0], r.bitfield('foo', 'INCRBY', 'i5', 100, 1, 'GET', 'u4', 0)
+    end
 
     def test_mget
       r.set('{1}foo', 's1')
@@ -327,7 +325,7 @@ module Lint
       assert_nil response['{1}baz']
     end
 
-    # TODO: pipeline not implmeneted yet
+    # TODO: pipeline is not supported
     # def test_mapped_mget_in_a_pipeline_returns_hash
     #   r.set('{1}foo', 's1')
     #   r.set('{1}bar', 's2')
@@ -338,7 +336,7 @@ module Lint
     #
     #   assert_equal({ '{1}foo' => 's1', '{1}bar' => 's2' }, result[0])
     # end
-  #
+
     def test_mset
       r.mset('{1}foo', 's1', '{1}bar', 's2')
 

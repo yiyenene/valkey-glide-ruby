@@ -1,6 +1,6 @@
 # Valkey
 
-A Ruby client library for Valkey built with [Valkey Glide Core][valkey-glide-home] that tries to provide a drop in replacement for redis-rb.
+A Ruby client library for [Valkey][valkey-home] built with [Valkey Glide Core][valkey-glide-home] that tries to provide a drop in replacement for redis-rb.
 
 ## Getting started
 
@@ -24,5 +24,5 @@ valkey.get("mykey")
 # => "hello world"
 ```
 
-
+[valkey-home]: https://valkey.io
 [valkey-glide-home]: https://github.com/valkey-io/valkey-glide

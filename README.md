@@ -1,6 +1,6 @@
 # Valkey
 
-Valkey gem is based on redis-rb and provides a Ruby client for Valkey
+A Ruby client library for Valkey built with [Valkey Glide Core][valkey-glide-home] that tries to provide a drop in replacement for redis-rb.
 
 ## Getting started
 
@@ -23,3 +23,6 @@ valkey.set("mykey", "hello world")
 valkey.get("mykey")
 # => "hello world"
 ```
+
+
+[valkey-glide-home]: https://github.com/valkey-io/valkey-glide

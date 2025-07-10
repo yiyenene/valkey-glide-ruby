@@ -29,7 +29,9 @@ class Valkey
     buffers = []
 
     command_args.each_with_index do |arg, i|
-      buf = FFI::MemoryPointer.from_string(arg)
+      arg = arg.to_s # Ensure we convert to string
+
+      buf = FFI::MemoryPointer.from_string(arg.to_s)
       buffers << buf # prevent garbage collection
       arg_ptrs.put_pointer(i * FFI::Pointer.size, buf)
       arg_lens.put_ulong(i * 8, arg.bytesize)

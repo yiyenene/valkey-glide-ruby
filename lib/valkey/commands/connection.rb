@@ -35,7 +35,7 @@ class Valkey
       # @param [Integer] db zero-based index of the DB to use (0 to 15)
       # @return [String] `OK`
       def select(db)
-        send_command(RequestType::SELECT, [db.to_s])
+        send_command(RequestType::SELECT, [db])
       end
 
       # Close the connection.

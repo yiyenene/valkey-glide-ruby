@@ -44,11 +44,11 @@ module Helper
 
     def initialize(version)
       @parts = case version
-               when Version
-                 version.parts
+      when Version
+        version.parts
                else
-                 version.to_s.split(".")
-               end
+        version.to_s.split(".")
+      end
     end
 
     def <=>(other)

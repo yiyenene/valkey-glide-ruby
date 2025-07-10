@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Valkey 
+class Valkey
   module Commands
     module Keys
       # Scan the keyspace
@@ -441,8 +441,6 @@ class Valkey
       # def type(key)
       #   send_command([:type, key])
       # end
-
-      private
 
       # def _scan(command, cursor, args, match: nil, count: nil, type: nil, &block)
       #   # SSCAN/ZSCAN/HSCAN already prepend the key to +args+.

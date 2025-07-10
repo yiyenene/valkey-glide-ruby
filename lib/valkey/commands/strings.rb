@@ -184,6 +184,7 @@ class Valkey
       def mapped_msetnx(hash)
         msetnx(*hash.flatten)
       end
+
       # Get the value of a key.
       #
       # @param [String] key
@@ -255,7 +256,6 @@ class Valkey
       # @return [Integer] length of the string after appending
       def append(key, value)
         send_command(RequestType::APPEND, [key, value])
-
       end
 
       # Set the string value of a key and return its old value.

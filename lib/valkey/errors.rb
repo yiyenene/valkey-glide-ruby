@@ -5,11 +5,11 @@ class Valkey
 
   class ProtocolError < BaseError
     def initialize(reply_type)
-      super(<<-EOS.gsub(/(?:^|\n)\s*/, " "))
+      super(<<-MESSAGE.gsub(/(?:^|\n)\s*/, " "))
         Got '#{reply_type}' as initial reply byte.
         If you're in a forking environment, such as Unicorn, you need to
         connect to Valkey after forking.
-      EOS
+      MESSAGE
     end
   end
 

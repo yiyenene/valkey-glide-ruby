@@ -15,7 +15,7 @@ module Lint
     end
 
     def test_set_and_get_with_non_string_value
-      value = ["a", "b"]
+      value = %w[a b]
 
       r.set("foo", value)
 
@@ -105,7 +105,7 @@ module Lint
 
     def test_setex_with_non_string_value
       skip "setex is deprecated in Redis 2.6.12"
-      value = ["b", "a", "r"]
+      value = %w[b a r]
 
       assert r.setex("foo", 1, value)
       assert_equal value.to_s, r.get("foo")
@@ -121,7 +121,7 @@ module Lint
 
     def test_psetex_with_non_string_value
       skip "psetex is deprecated in Redis 2.6.12"
-      value = ["b", "a", "r"]
+      value = %w[b a r]
 
       assert r.psetex("foo", 1000, value)
       assert_equal value.to_s, r.get("foo")
@@ -156,7 +156,7 @@ module Lint
       skip "getset is deprecated in Redis 6.2.0"
       r.set("foo", "zap")
 
-      value = ["b", "a", "r"]
+      value = %w[b a r]
 
       assert_equal "zap", r.getset("foo", value)
       assert_equal value.to_s, r.get("foo")
@@ -177,7 +177,7 @@ module Lint
     def test_setnx_with_non_string_value
       skip "setnx is deprecated in Redis 2.6.12"
 
-      value = ["b", "a", "r"]
+      value = %w[b a r]
 
       r.set("foo", "qux")
       assert !r.setnx("foo", value)
@@ -283,7 +283,7 @@ module Lint
     def test_setrange_with_non_string_value
       r.set("foo", "abcde")
 
-      value = ["b", "a", "r"]
+      value = %w[b a r]
 
       r.setrange("foo", 2, value)
 

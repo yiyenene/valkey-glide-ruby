@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "A Ruby client library for Valkey based on redis-rb."
   spec.description = "A Ruby client library for Valkey based on redis-rb."
   spec.homepage = "https://github.com/mohsen-alizadeh/valkey-rb"
-  spec.required_ruby_version = ">= 3.1.0"
+  spec.required_ruby_version = '>= 2.6.0'
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
@@ -29,5 +29,5 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "ffi", "~> 1.17.0"
-  spec.add_dependency "google-protobuf", "~> 4.29.2"
+  spec.add_dependency "google-protobuf", "~> 3.23", ">= 3.23.4"
 end

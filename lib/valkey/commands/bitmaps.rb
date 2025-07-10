@@ -10,7 +10,7 @@ class Valkey
       # @param [Integer] value bit value `0` or `1`
       # @return [Integer] the original bit value stored at `offset`
       def setbit(key, offset, value)
-        send_command(RequestType::SET_BIT, [key, offset.to_s, value.to_s])
+        send_command(RequestType::SET_BIT, [key, offset, value])
       end
 
       # Returns the bit value at offset in the string value stored at key.
@@ -19,7 +19,7 @@ class Valkey
       # @param [Integer] offset bit offset
       # @return [Integer] `0` or `1`
       def getbit(key, offset)
-        send_command(RequestType::GET_BIT, [key, offset.to_s])
+        send_command(RequestType::GET_BIT, [key, offset])
       end
 
       # Count the number of set bits in a range of the string value stored at key.
@@ -31,8 +31,8 @@ class Valkey
       #     e.g. 'BYTE' - interpreted as a range of bytes, 'BIT' - interpreted as a range of bits
       # @return [Integer] the number of bits set to 1
       def bitcount(key, start = 0, stop = -1, scale: nil)
-        args = [key, start.to_s, stop.to_s]
-        args << scale.to_s if scale
+        args = [key, start, stop]
+        args << scale if scale
         send_command(RequestType::BIT_COUNT, args)
       end
 
@@ -44,7 +44,7 @@ class Valkey
       # @return [Integer] the length of the string stored in `destkey`
       def bitop(operation, destkey, *keys)
         keys.flatten!(1)
-        args = [operation.to_s, destkey]
+        args = [operation, destkey]
         args.concat(keys)
 
         send_command(RequestType::BIT_OP, args)
@@ -64,15 +64,15 @@ class Valkey
       #     e.g. 'BYTE' - interpreted as a range of bytes, 'BIT' - interpreted as a range of bits
       # @return [Integer] the position of the first 1/0 bit.
       #                  -1 if looking for 1 and it is not found or start and stop are given.
-      # def bitpos(key, bit, start = nil, stop = nil, scale: nil)
-      #   raise(ArgumentError, 'stop parameter specified without start parameter') if stop && !start
-      #
-      #   command = [:bitpos, key, bit]
-      #   command << start if start
-      #   command << stop if stop
-      #   command << scale if scale
-      #   send_command(command)
-      # end
+      def bitpos(key, bit, start = nil, stop = nil, scale: nil)
+        raise(ArgumentError, 'stop parameter specified without start parameter') if stop && !start
+
+        args = [key, bit]
+        args << start if start
+        args << stop if stop
+        args << scale if scale
+        send_command(RequestType::BIT_POS, args)
+      end
     end
   end
 end

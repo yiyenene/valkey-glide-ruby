@@ -26,7 +26,7 @@ class Valkey
       # @param [Integer] decrement
       # @return [Integer] value after decrementing it
       def decrby(key, decrement)
-        send_command(RequestType::DECR_BY, [key, decrement.to_s])
+        send_command(RequestType::DECR_BY, [key, decrement])
       end
 
       # Increment the integer value of a key by one.
@@ -51,7 +51,7 @@ class Valkey
       # @param [Integer] increment
       # @return [Integer] value after incrementing it
       def incrby(key, increment)
-        send_command(RequestType::INCR_BY, [key, increment.to_s])
+        send_command(RequestType::INCR_BY, [key, increment])
       end
 
       # Increment the numeric value of a key by the given float number.
@@ -64,7 +64,7 @@ class Valkey
       # @param [Float] increment
       # @return [Float] value after incrementing it
       def incrbyfloat(key, increment)
-        send_command(RequestType::INCR_BY_FLOAT, [key, increment.to_s])
+        send_command(RequestType::INCR_BY_FLOAT, [key, increment])
       end
 
       # Set the string value of a key.
@@ -82,11 +82,11 @@ class Valkey
       #   - `:get => true`: Return the old string stored at key, or nil if key did not exist.
       # @return [String, Boolean] `"OK"` or true, false if `:nx => true` or `:xx => true`
       def set(key, value, ex: nil, px: nil, exat: nil, pxat: nil, nx: nil, xx: nil, keepttl: nil, get: nil)
-        args = [key, value.to_s]
-        args << "EX" << ex.to_s if ex
-        args << "PX" << px.to_s if px
-        args << "EXAT" << exat.to_s if exat
-        args << "PXAT" << pxat.to_s if pxat
+        args = [key, value]
+        args << "EX" << ex if ex
+        args << "PX" << px if px
+        args << "EXAT" << exat if exat
+        args << "PXAT" << pxat if pxat
         args << "NX" if nx
         args << "XX" if xx
         args << "KEEPTTL" if keepttl
@@ -107,7 +107,7 @@ class Valkey
       # @param [String] value
       # @return [String] `"OK"`
       def setex(key, ttl, value)
-        send_command(RequestType::SET_EX, [key, ttl.to_s, value.to_s])
+        send_command(RequestType::SET_EX, [key, ttl, value])
       end
 
       # Set the time to live in milliseconds of a key.
@@ -117,7 +117,7 @@ class Valkey
       # @param [String] value
       # @return [String] `"OK"`
       def psetex(key, ttl, value)
-        send_command(RequestType::PSET_EX, [key, Integer(ttl), value.to_s])
+        send_command(RequestType::PSET_EX, [key, Integer(ttl), value])
       end
 
       # Set the value of a key, only if the key does not exist.
@@ -126,7 +126,7 @@ class Valkey
       # @param [String] value
       # @return [Boolean] whether the key was set or not
       def setnx(key, value)
-        send_command(RequestType::SET_NX, [key, value.to_s])
+        send_command(RequestType::SET_NX, [key, value])
       end
 
       # Set one or more values.
@@ -234,7 +234,7 @@ class Valkey
       # @param [String] value
       # @return [Integer] length of the string after it was modified
       def setrange(key, offset, value)
-        send_command(RequestType::SET_RANGE, [key, offset.to_s, value.to_s])
+        send_command(RequestType::SET_RANGE, [key, offset, value])
       end
 
       # Get a substring of the string stored at a key.
@@ -245,7 +245,7 @@ class Valkey
       #   the end of the string
       # @return [Integer] `0` or `1`
       def getrange(key, start, stop)
-        send_command(RequestType::GET_RANGE, [key, start.to_s, stop.to_s])
+        send_command(RequestType::GET_RANGE, [key, start, stop])
       end
 
       # Append a value to a key.
@@ -265,7 +265,7 @@ class Valkey
       # @return [String] the old value stored in the key, or `nil` if the key
       #   did not exist
       def getset(key, value)
-        send_command(RequestType::GET_SET, [key, value.to_s])
+        send_command(RequestType::GET_SET, [key, value])
       end
 
       # Get the value of key and delete the key. This command is similar to GET,
@@ -294,10 +294,10 @@ class Valkey
       # @return [String] The value of key, or nil when key does not exist.
       def getex(key, ex: nil, px: nil, exat: nil, pxat: nil, persist: false)
         args = [key]
-        args << "EX" << ex.to_s if ex
-        args << "PX" << px.to_s if px
-        args << "EXAT" << exat.to_s if exat
-        args << "PXAT" << pxat.to_s if pxat
+        args << "EX" << ex if ex
+        args << "PX" << px if px
+        args << "EXAT" << exat if exat
+        args << "PXAT" << pxat if pxat
         args << "PERSIST" if persist
 
         send_command(RequestType::GET_EX, args)

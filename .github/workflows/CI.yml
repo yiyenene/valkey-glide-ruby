@@ -18,7 +18,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.3.7"
+          ruby-version: "3.3"
           bundler-cache: true
       - name: Lint
         run: bundle exec rubocop
@@ -29,7 +29,8 @@ jobs:
     strategy:
       matrix:
         ruby:
-          - 3.3.7
+          - 3.4
+          - 3.3
         valkey:
           - 7.0
           - 7.2.9

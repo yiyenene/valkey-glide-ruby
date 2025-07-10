@@ -17,7 +17,8 @@ class Valkey
   include Commands
 
   def your_pubsub_callback(_client_ptr, kind, msg_ptr, msg_len, chan_ptr, chan_len, pat_ptr, pat_len)
-    puts "PubSub received kind=#{kind}, message=#{msg_ptr.read_string(msg_len)}, channel=#{chan_ptr.read_string(chan_len)}, pattern=#{pat_ptr.read_string(pat_len)}"
+    puts "PubSub received kind=#{kind}, message=#{msg_ptr.read_string(msg_len)}"\
+          ", channel=#{chan_ptr.read_string(chan_len)}, pattern=#{pat_ptr.read_string(pat_len)}"
   end
 
   def send_command(command_type, command_args = [], &block)
@@ -52,7 +53,7 @@ class Valkey
 
     result = Bindings::CommandResult.new(res)[:response]
 
-    convert_response = -> (result) {
+    convert_response = lambda { |result|
       # TODO: handle all types of responses
       case result[:response_type]
       when ResponseType::STRING

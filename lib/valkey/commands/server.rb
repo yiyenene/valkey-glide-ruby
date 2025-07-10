@@ -8,7 +8,7 @@ class Valkey
       #
       # @return [String] `OK`
       def bgrewriteaof
-        # TODO:
+        # TODO: not implemented yet
         # send_command([:bgrewriteaof])
       end
 
@@ -16,7 +16,7 @@ class Valkey
       #
       # @return [String] `OK`
       def bgsave
-        # TODO:
+        # TODO: not implemented yet
         # send_command([:bgsave])
       end
 
@@ -26,7 +26,7 @@ class Valkey
       # @return [String, Hash] string reply, or hash when retrieving more than one
       #   property with `CONFIG GET`
       def config(action, *args)
-        # TODO:
+        # TODO: not implemented yet
 
         # send_command([:config, action] + args) do |reply|
         #   if reply.is_a?(Array) && action == :get

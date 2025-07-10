@@ -144,7 +144,7 @@ class Valkey
 
     # List commands
     BLMOVE = 801
-    BLMPop = 802
+    BLMPOP = 802
     BLPOP = 803
     BRPOP = 804
     BRPOPLPUSH = 805 # deprecated in 6.2.0

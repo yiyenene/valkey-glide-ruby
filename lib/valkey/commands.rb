@@ -6,7 +6,6 @@ require "valkey/commands/server"
 require "valkey/commands/keys"
 require "valkey/commands/bitmaps"
 
-
 class Valkey
   module Commands
     include Strings

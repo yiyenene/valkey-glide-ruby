@@ -82,7 +82,7 @@ class Valkey
     ], :pointer        # *const ConnectionResponse
 
     attach_function :close_client, [
-      :pointer,     # client_adapter_ptr
+      :pointer # client_adapter_ptr
     ], :void
 
     attach_function :command, [

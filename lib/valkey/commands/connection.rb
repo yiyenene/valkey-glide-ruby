@@ -42,7 +42,7 @@ class Valkey
       #
       # @return [String] `OK`
       def quit
-        # TODO:
+        # TODO: Implement a proper quit command
         # synchronize do |client|
         #   client.call_v([:quit])
         # rescue ConnectionError

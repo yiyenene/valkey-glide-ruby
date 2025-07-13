@@ -81,15 +81,15 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def expire(key, seconds, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:expire, key, Integer(seconds)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Utils::Boolify)
-      # end
+      def expire(key, seconds, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(seconds)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::EXPIRE, args)
+      end
 
       # Set the expiration for a key as a UNIX timestamp.
       #

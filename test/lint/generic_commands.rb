@@ -136,5 +136,25 @@ module Lint
       assert_equal true, r.exists?("{1}foo", "{1}bar")
       assert_equal true, r.exists?(["{1}foo", "{1}bar"])
     end
+
+    def test_expire
+      r.set("foo", "s1")
+      assert r.expire("foo", 2)
+      assert_in_range 0..2, r.ttl("foo")
+
+      target_version "7.0.0" do
+        r.set("bar", "s2")
+        refute r.expire("bar", 5, xx: true)
+        assert r.expire("bar", 5, nx: true)
+        refute r.expire("bar", 5, nx: true)
+        assert r.expire("bar", 5, xx: true)
+
+        r.expire("bar", 10)
+        refute r.expire("bar", 15, lt: true)
+        refute r.expire("bar", 5, gt: true)
+        assert r.expire("bar", 15, gt: true)
+        assert r.expire("bar", 5, lt: true)
+      end
+    end
   end
 end

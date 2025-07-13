@@ -101,15 +101,15 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def expireat(key, unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:expireat, key, Integer(unix_time)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Utils::Boolify)
-      # end
+      def expireat(key, unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(unix_time)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::EXPIRE_AT, args)
+      end
 
       # Get a key's expiry time specified as number of seconds from UNIX Epoch
       #

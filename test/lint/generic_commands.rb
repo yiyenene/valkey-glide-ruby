@@ -156,5 +156,27 @@ module Lint
         assert r.expire("bar", 5, lt: true)
       end
     end
+
+    def test_expireat
+      r.set("foo", "s1")
+      assert r.expireat("foo", (Time.now + 2).to_i)
+      assert_in_range 0..2, r.ttl("foo")
+    end
+
+    def test_expireat_keywords
+      target_version "7.0.0" do
+        r.set("bar", "s2")
+        refute r.expireat("bar", (Time.now + 5).to_i, xx: true)
+        assert r.expireat("bar", (Time.now + 5).to_i, nx: true)
+        refute r.expireat("bar", (Time.now + 5).to_i, nx: true)
+        assert r.expireat("bar", (Time.now + 5).to_i, xx: true)
+
+        r.expireat("bar", (Time.now + 10).to_i)
+        refute r.expireat("bar", (Time.now + 15).to_i, lt: true)
+        refute r.expireat("bar", (Time.now + 5).to_i, gt: true)
+        assert r.expireat("bar", (Time.now + 15).to_i, gt: true)
+        assert r.expireat("bar", (Time.now + 5).to_i, lt: true)
+      end
+    end
   end
 end

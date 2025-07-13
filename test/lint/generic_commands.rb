@@ -38,5 +38,67 @@ module Lint
         end
       end
     end
+
+    def test_del
+      r.set "foo", "s1"
+      r.set "bar", "s2"
+      r.set "baz", "s3"
+
+      assert_equal %w[bar baz foo], all_keys
+
+      assert_equal 0, r.del("")
+
+      assert_equal 1, r.del("foo")
+
+      assert_equal %w[bar baz], all_keys
+
+      assert_equal 2, r.del("bar", "baz")
+
+      assert_equal [], all_keys
+    end
+
+    def test_del_with_array_argument
+      r.set "foo", "s1"
+      r.set "bar", "s2"
+      r.set "baz", "s3"
+
+      assert_equal %w[bar baz foo], all_keys
+
+      assert_equal 0, r.del([])
+
+      assert_equal 1, r.del(["foo"])
+
+      assert_equal %w[bar baz], all_keys
+
+      assert_equal 2, r.del(%w[bar baz])
+
+      assert_equal [], all_keys
+    end
+
+    def test_dump_and_restore
+      r.set("foo", "a")
+      v = r.dump("foo")
+      r.del("foo")
+
+      assert r.restore("foo", 1000, v)
+      assert_equal "a", r.get("foo")
+      assert [0, 1].include? r.ttl("foo")
+
+      r.rpush("bar", %w[b c d])
+      w = r.dump("bar")
+      r.del("bar")
+
+      assert r.restore("bar", 1000, w)
+      assert_equal %w[b c d], r.lrange("bar", 0, -1)
+      assert [0, 1].include? r.ttl("bar")
+
+      r.set("bar", "somethingelse")
+      assert_raises(Valkey::CommandError) { r.restore("bar", 1000, w) } # ensure by default replace is false
+      assert_raises(Valkey::CommandError) { r.restore("bar", 1000, w, replace: false) }
+      assert_equal "somethingelse", r.get("bar")
+      assert r.restore("bar", 1000, w, replace: true)
+      assert_equal %w[b c d], r.lrange("bar", 0, -1)
+      assert [0, 1].include? r.ttl("bar")
+    end
   end
 end

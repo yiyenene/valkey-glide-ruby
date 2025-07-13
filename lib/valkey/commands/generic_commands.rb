@@ -27,9 +27,9 @@ class Valkey
       #
       # @return [String, Array<String>] the next cursor and all found keys
       #
-      # def scan(cursor, **options)
-      #   _scan(:scan, cursor, [], **options)
-      # end
+      def scan(cursor, **options)
+        _scan(RequestType::SCAN, cursor, [], **options)
+      end
 
       # Scan the keyspace
       #
@@ -202,9 +202,9 @@ class Valkey
       #
       # @param [String] key
       # @return [String] serialized_value
-      # def dump(key)
-      #   send_command([:dump, key])
-      # end
+      def dump(key)
+        send_command(RequestType::DUMP, [key])
+      end
 
       # Create a key using the serialized value, previously obtained using DUMP.
       #
@@ -215,12 +215,12 @@ class Valkey
       #   - `:replace => Boolean`: if false, raises an error if key already exists
       # @raise [valkey::CommandError]
       # @return [String] `"OK"`
-      # def restore(key, ttl, serialized_value, replace: nil)
-      #   args = [:restore, key, ttl, serialized_value]
-      #   args << 'REPLACE' if replace
-      #
-      #   send_command(args)
-      # end
+      def restore(key, ttl, serialized_value, replace: nil)
+        args = [key, ttl, serialized_value]
+        args << 'REPLACE' if replace
+
+        send_command(RequestType::RESTORE, args)
+      end
 
       # Transfer a key from the connected instance to another instance.
       #
@@ -281,21 +281,6 @@ class Valkey
       # def exists?(*keys)
       #   send_command([:exists, *keys]) do |value|
       #     value > 0
-      #   end
-      # end
-
-      # Find all keys matching the given pattern.
-      #
-      # @param [String] pattern
-      # @return [Array<String>]
-      #
-      # def keys(pattern = "*")
-      #   send_command([:keys, pattern]) do |reply|
-      #     if reply.is_a?(String)
-      #       reply.split(" ")
-      #     else
-      #       reply
-      #     end
       #   end
       # end
 
@@ -443,16 +428,16 @@ class Valkey
       #   send_command([:type, key])
       # end
 
-      # def _scan(command, cursor, args, match: nil, count: nil, type: nil, &block)
-      #   # SSCAN/ZSCAN/HSCAN already prepend the key to +args+.
-      #
-      #   args << cursor
-      #   args << "MATCH" << match if match
-      #   args << "COUNT" << Integer(count) if count
-      #   args << "TYPE" << type if type
-      #
-      #   send_command([command] + args, &block)
-      # end
+      def _scan(command, cursor, args, match: nil, count: nil, type: nil, &block)
+        # SSCAN/ZSCAN/HSCAN already prepend the key to +args+.
+
+        args << cursor
+        args << "MATCH" << match if match
+        args << "COUNT" << Integer(count) if count
+        args << "TYPE" << type if type
+
+        send_command(command, args, &block)
+      end
     end
   end
 end

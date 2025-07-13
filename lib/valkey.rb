@@ -6,6 +6,7 @@ require "google/protobuf"
 require "valkey/version"
 require "valkey/request_type"
 require "valkey/response_type"
+require "valkey/request_error_type"
 require "valkey/protobuf/command_request_pb"
 require "valkey/protobuf/connection_request_pb"
 require "valkey/protobuf/response_pb"
@@ -13,19 +14,16 @@ require "valkey/bindings"
 require "valkey/utils"
 require "valkey/commands"
 require "valkey/errors"
+require "valkey/pubsub_callback"
 
 class Valkey
   include Utils
   include Commands
-
-  def your_pubsub_callback(_client_ptr, kind, msg_ptr, msg_len, chan_ptr, chan_len, pat_ptr, pat_len)
-    puts "PubSub received kind=#{kind}, message=#{msg_ptr.read_string(msg_len)}"\
-          ", channel=#{chan_ptr.read_string(chan_len)}, pattern=#{pat_ptr.read_string(pat_len)}"
-  end
+  include PubSubCallback
 
   def send_command(command_type, command_args = [], &block)
     channel = 0
-    route = "" # empty or some serialized route bytes
+    route = ""
 
     arg_ptrs = FFI::MemoryPointer.new(:pointer, command_args.size)
     arg_lens = FFI::MemoryPointer.new(:ulong, command_args.size)
@@ -53,7 +51,24 @@ class Valkey
       route.bytesize
     )
 
-    result = Bindings::CommandResult.new(res)[:response]
+    result = Bindings::CommandResult.new(res)
+
+    if result[:response].null?
+      error = result[:command_error]
+
+      case error[:command_error_type]
+      when RequestErrorType::EXECABORT, RequestErrorType::UNSPECIFIED
+        raise CommandError, error[:command_error_message]
+      when RequestErrorType::TIMEOUT
+        raise TimeoutError, error[:command_error_message]
+      when RequestErrorType::DISCONNECT
+        raise ConnectionError, error[:command_error_message]
+      else
+        raise "Unknown error type: #{error[:command_error_type]}"
+      end
+    end
+
+    result = result[:response]
 
     convert_response = lambda { |result|
       # TODO: handle all types of responses
@@ -113,7 +128,7 @@ class Valkey
       request_buf,
       request_len,
       client_type,
-      method(:your_pubsub_callback) # Pass the pubsub callback
+      method(:pubsub_callback)
     )
 
     res = Bindings::ConnectionResponse.new(response_ptr)

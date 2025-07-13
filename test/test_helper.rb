@@ -125,6 +125,18 @@ module Helper
       end
     end
 
+    def all_keys
+      list = []
+
+      loop do
+        cursor, keys = r.scan(0, match: "*", count: 100)
+        list.concat(keys)
+        break if cursor == "0"
+      end
+
+      list.sort
+    end
+
     def with_db(index)
       r.select(index)
       yield

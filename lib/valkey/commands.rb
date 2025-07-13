@@ -5,6 +5,7 @@ require "valkey/commands/connection_commands"
 require "valkey/commands/server_commands"
 require "valkey/commands/generic_commands"
 require "valkey/commands/bitmap_commands"
+require "valkey/commands/list_commands"
 
 class Valkey
   # Valkey commands module
@@ -25,5 +26,16 @@ class Valkey
     include ServerCommands
     include GenericCommands
     include BitmapCommands
+    include ListCommands
+
+    # there are a few commands that are not implemented by design
+    #
+    # raises CommandError when called
+    #
+    %i[keys].each do |command|
+      define_method command do |*_args|
+        raise CommandError, "Unsupported command: #{command}"
+      end
+    end
   end
 end

@@ -234,7 +234,7 @@ class Valkey
       #   - `:replace => Boolean`: Replace existing key on the remote instance.
       # @return [String] `"OK"`
       # def migrate(key, options)
-      #   args = [:migrate]
+      #   args = []
       #   args << (options[:host] || raise(':host not specified'))
       #   args << (options[:port] || raise(':port not specified'))
       #   args << (key.is_a?(String) ? key : '')
@@ -244,7 +244,7 @@ class Valkey
       #   args << 'REPLACE' if options[:replace]
       #   args += ['KEYS', *key] if key.is_a?(Array)
       #
-      #   send_command(args)
+      #   send_command(RequestType::MIGRATE, args)
       # end
 
       # Delete one or more keys.
@@ -301,9 +301,9 @@ class Valkey
       # @param [String] key
       # @param [Integer] db
       # @return [Boolean] whether the key was moved or not
-      # def move(key, db)
-      #   send_command([:move, key, db], &Utils::Boolify)
-      # end
+      def move(key, db)
+        send_command(RequestType::MOVE, [key, db])
+      end
 
       # Copy a value from one key to another.
       #

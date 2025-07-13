@@ -191,5 +191,28 @@ module Lint
         assert_equal(-2, r.expiretime("key-that-exists-not"))
       end
     end
+
+    def test_move
+      r.select 14
+      r.flushdb
+
+      r.set "bar", "s3"
+
+      r.select 15
+
+      r.set "foo", "s1"
+      r.set "bar", "s2"
+
+      assert r.move("foo", 14)
+      assert_nil r.get("foo")
+
+      assert !r.move("bar", 14)
+      assert_equal "s2", r.get("bar")
+
+      r.select 14
+
+      assert_equal "s1", r.get("foo")
+      assert_equal "s3", r.get("bar")
+    end
   end
 end

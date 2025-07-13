@@ -262,9 +262,9 @@ class Valkey
       #
       # @param [String, Array<String>] keys
       # @return [Integer] number of keys that were unlinked
-      # def unlink(*keys)
-      #   send_command([:unlink] + keys)
-      # end
+      def unlink(*keys)
+        send_command(RequestType::UNLINK, keys.flatten)
+      end
 
       # Determine how many of the keys exists.
       #
@@ -425,13 +425,25 @@ class Valkey
         end
       end
 
+      def touch(*keys)
+        send_command(RequestType::TOUCH, keys.flatten)
+      end
+
+      def wait(*keys)
+        send_command(RequestType::WAIT, keys.flatten)
+      end
+
+      def waitof(*keys)
+        send_command(RequestType::WAIT_AOF, keys.flatten)
+      end
+
       # Determine the type stored at key.
       #
       # @param [String] key
       # @return [String] `string`, `list`, `set`, `zset`, `hash` or `none`
-      # def type(key)
-      #   send_command([:type, key])
-      # end
+      def type(key)
+        send_command(RequestType::TYPE, [key])
+      end
 
       def _scan(command, cursor, args, match: nil, count: nil, type: nil, &block)
         # SSCAN/ZSCAN/HSCAN already prepend the key to +args+.

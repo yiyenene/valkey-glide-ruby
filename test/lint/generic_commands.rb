@@ -2,6 +2,14 @@
 
 module Lint
   module GenericCommands
+    def set_some_keys
+      valkey.set('key1', 'Hello')
+      valkey.set('key2', 'World')
+
+      valkey.set('{key}1', 'Hello')
+      valkey.set('{key}2', 'World')
+    end
+
     def test_copy
       target_version("6.2") do
         with_db(14) do
@@ -311,6 +319,38 @@ module Lint
 
       assert_equal "s1", r.get("foo")
       assert_equal "s2", r.get("bar")
+    end
+
+    def test_scan
+      set_some_keys
+
+      cursor = 0
+      all_keys = []
+      loop do
+        cursor, keys = valkey.scan(cursor, match: '{key}*')
+        all_keys += keys
+        break if cursor == '0'
+      end
+
+      assert_equal 2, all_keys.uniq.size
+    end
+
+    def test_type
+      assert_equal "none", r.type("foo")
+
+      r.set("foo", "s1")
+
+      assert_equal "string", r.type("foo")
+    end
+
+    def test_ttl
+      r.set("foo", "s1")
+      r.expire("foo", 2)
+      assert_in_range 0..2, r.ttl("foo")
+    end
+
+    def test_wait
+      assert_equal r.wait(0, 0), 0
     end
   end
 end

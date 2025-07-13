@@ -27,9 +27,9 @@ class Valkey
       #
       # @return [String, Array<String>] the next cursor and all found keys
       #
-      # def scan(cursor, **options)
-      #   _scan(:scan, cursor, [], **options)
-      # end
+      def scan(cursor, **options)
+        _scan(RequestType::SCAN, cursor, [], **options)
+      end
 
       # Scan the keyspace
       #
@@ -67,9 +67,9 @@ class Valkey
       #
       # @param [String] key
       # @return [Boolean] whether the timeout was removed or not
-      # def persist(key)
-      #   send_command([:persist, key], &Boolify)
-      # end
+      def persist(key)
+        send_command(RequestType::PERSIST, [key])
+      end
 
       # Set a key's time to live in seconds.
       #
@@ -81,15 +81,15 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def expire(key, seconds, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:expire, key, Integer(seconds)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Boolify)
-      # end
+      def expire(key, seconds, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(seconds)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::EXPIRE, args)
+      end
 
       # Set the expiration for a key as a UNIX timestamp.
       #
@@ -101,23 +101,23 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def expireat(key, unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:expireat, key, Integer(unix_time)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Boolify)
-      # end
+      def expireat(key, unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(unix_time)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::EXPIRE_AT, args)
+      end
 
       # Get a key's expiry time specified as number of seconds from UNIX Epoch
       #
       # @param  [String] key
       # @return [Integer] expiry time specified as number of seconds from UNIX Epoch
-      # def expiretime(key)
-      #   send_command([:expiretime, key])
-      # end
+      def expiretime(key)
+        send_command(RequestType::EXPIRE_TIME, [key])
+      end
 
       # Get the time to live (in seconds) for a key.
       #
@@ -145,15 +145,15 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def pexpire(key, milliseconds, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:pexpire, key, Integer(milliseconds)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Boolify)
-      # end
+      def pexpire(key, milliseconds, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(milliseconds)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::PEXPIRE, args)
+      end
 
       # Set the expiration for a key as number of milliseconds from UNIX Epoch.
       #
@@ -165,23 +165,23 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def pexpireat(key, ms_unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:pexpireat, key, Integer(ms_unix_time)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Boolify)
-      # end
+      def pexpireat(key, ms_unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(ms_unix_time)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::PEXPIRE_AT, args)
+      end
 
       # Get a key's expiry time specified as number of milliseconds from UNIX Epoch
       #
       # @param  [String] key
       # @return [Integer] expiry time specified as number of milliseconds from UNIX Epoch
-      # def pexpiretime(key)
-      #   send_command([:pexpiretime, key])
-      # end
+      def pexpiretime(key)
+        send_command(RequestType::PEXPIRE_TIME, [key])
+      end
 
       # Get the time to live (in milliseconds) for a key.
       #
@@ -194,17 +194,17 @@ class Valkey
       #
       #     - The command returns -2 if the key does not exist.
       #     - The command returns -1 if the key exists but has no associated expire.
-      # def pttl(key)
-      #   send_command([:pttl, key])
-      # end
+      def pttl(key)
+        send_command(RequestType::PTTL, [key])
+      end
 
       # Return a serialized version of the value stored at a key.
       #
       # @param [String] key
       # @return [String] serialized_value
-      # def dump(key)
-      #   send_command([:dump, key])
-      # end
+      def dump(key)
+        send_command(RequestType::DUMP, [key])
+      end
 
       # Create a key using the serialized value, previously obtained using DUMP.
       #
@@ -215,12 +215,12 @@ class Valkey
       #   - `:replace => Boolean`: if false, raises an error if key already exists
       # @raise [valkey::CommandError]
       # @return [String] `"OK"`
-      # def restore(key, ttl, serialized_value, replace: nil)
-      #   args = [:restore, key, ttl, serialized_value]
-      #   args << 'REPLACE' if replace
-      #
-      #   send_command(args)
-      # end
+      def restore(key, ttl, serialized_value, replace: nil)
+        args = [key, ttl, serialized_value]
+        args << 'REPLACE' if replace
+
+        send_command(RequestType::RESTORE, args)
+      end
 
       # Transfer a key from the connected instance to another instance.
       #
@@ -234,7 +234,7 @@ class Valkey
       #   - `:replace => Boolean`: Replace existing key on the remote instance.
       # @return [String] `"OK"`
       # def migrate(key, options)
-      #   args = [:migrate]
+      #   args = []
       #   args << (options[:host] || raise(':host not specified'))
       #   args << (options[:port] || raise(':port not specified'))
       #   args << (key.is_a?(String) ? key : '')
@@ -244,7 +244,7 @@ class Valkey
       #   args << 'REPLACE' if options[:replace]
       #   args += ['KEYS', *key] if key.is_a?(Array)
       #
-      #   send_command(args)
+      #   send_command(RequestType::MIGRATE, args)
       # end
 
       # Delete one or more keys.
@@ -262,42 +262,25 @@ class Valkey
       #
       # @param [String, Array<String>] keys
       # @return [Integer] number of keys that were unlinked
-      # def unlink(*keys)
-      #   send_command([:unlink] + keys)
-      # end
+      def unlink(*keys)
+        send_command(RequestType::UNLINK, keys.flatten)
+      end
 
       # Determine how many of the keys exists.
       #
       # @param [String, Array<String>] keys
       # @return [Integer]
-      # def exists(*keys)
-      #   send_command([:exists, *keys])
-      # end
+      def exists(*keys)
+        send_command(RequestType::EXISTS, keys.flatten)
+      end
 
       # Determine if any of the keys exists.
       #
       # @param [String, Array<String>] keys
       # @return [Boolean]
-      # def exists?(*keys)
-      #   send_command([:exists, *keys]) do |value|
-      #     value > 0
-      #   end
-      # end
-
-      # Find all keys matching the given pattern.
-      #
-      # @param [String] pattern
-      # @return [Array<String>]
-      #
-      # def keys(pattern = "*")
-      #   send_command([:keys, pattern]) do |reply|
-      #     if reply.is_a?(String)
-      #       reply.split(" ")
-      #     else
-      #       reply
-      #     end
-      #   end
-      # end
+      def exists?(*keys)
+        send_command(RequestType::EXISTS, keys.flatten, &:positive?)
+      end
 
       # Move a key to another database.
       #
@@ -318,9 +301,9 @@ class Valkey
       # @param [String] key
       # @param [Integer] db
       # @return [Boolean] whether the key was moved or not
-      # def move(key, db)
-      #   send_command([:move, key, db], &Boolify)
-      # end
+      def move(key, db)
+        send_command(RequestType::MOVE, [key, db])
+      end
 
       # Copy a value from one key to another.
       #
@@ -347,42 +330,49 @@ class Valkey
       # @param [Integer] db
       # @param [Boolean] replace removes the `destination` key before copying value to it
       # @return [Boolean] whether the key was copied or not
-      # def copy(source, destination, db: nil, replace: false)
-      #   command = [:copy, source, destination]
-      #   command << "DB" << db if db
-      #   command << "REPLACE" if replace
-      #
-      #   send_command(command, &Boolify)
-      # end
-      #
-      # def object(*args)
-      #   send_command([:object] + args)
-      # end
+      def copy(source, destination, db: nil, replace: false)
+        args = [source, destination]
+        args << "DB" << db if db
+        args << "REPLACE" if replace
+
+        send_command(RequestType::COPY, args)
+      end
+
+      def object(subcommand, *args)
+        map = {
+          refcount: RequestType::OBJECT_REF_COUNT,
+          encoding: RequestType::OBJECT_ENCODING,
+          idletime: RequestType::OBJECT_IDLE_TIME,
+          freq: RequestType::OBJECT_FREQ
+        }
+
+        send_command(map[subcommand.to_sym], args.flatten)
+      end
 
       # Return a random key from the keyspace.
       #
       # @return [String]
-      # def randomkey
-      #   send_command([:randomkey])
-      # end
+      def randomkey
+        send_command(RequestType::RANDOM_KEY)
+      end
 
       # Rename a key. If the new key already exists it is overwritten.
       #
       # @param [String] old_name
       # @param [String] new_name
       # @return [String] `OK`
-      # def rename(old_name, new_name)
-      #   send_command([:rename, old_name, new_name])
-      # end
+      def rename(old_name, new_name)
+        send_command(RequestType::RENAME, [old_name, new_name])
+      end
 
       # Rename a key, only if the new key does not exist.
       #
       # @param [String] old_name
       # @param [String] new_name
       # @return [Boolean] whether the key was renamed or not
-      # def renamenx(old_name, new_name)
-      #   send_command([:renamenx, old_name, new_name], &Boolify)
-      # end
+      def renamenx(old_name, new_name)
+        send_command(RequestType::RENAME_NX, [old_name, new_name])
+      end
 
       # Sort the elements in a list, set or sorted set.
       #
@@ -409,50 +399,62 @@ class Valkey
       #   elements where every element is an array with the result for every
       #   element specified in `:get`
       #   - when `:store` is specified, the number of elements in the stored result
-      # def sort(key, by: nil, limit: nil, get: nil, order: nil, store: nil)
-      #   args = [:sort, key]
-      #   args << "BY" << by if by
-      #
-      #   if limit
-      #     args << "LIMIT"
-      #     args.concat(limit)
-      #   end
-      #
-      #   get = Array(get)
-      #   get.each do |item|
-      #     args << "GET" << item
-      #   end
-      #
-      #   args.concat(order.split(" ")) if order
-      #   args << "STORE" << store if store
-      #
-      #   send_command(args) do |reply|
-      #     if get.size > 1 && !store
-      #       reply.each_slice(get.size).to_a if reply
-      #     else
-      #       reply
-      #     end
-      #   end
-      # end
+      def sort(key, by: nil, limit: nil, get: nil, order: nil, store: nil)
+        args = [key]
+        args << "BY" << by if by
+
+        if limit
+          args << "LIMIT"
+          args.concat(limit)
+        end
+
+        get = Array(get)
+        get.each do |item|
+          args << "GET" << item
+        end
+
+        args.concat(order.split(" ")) if order
+        args << "STORE" << store if store
+
+        send_command(RequestType::SORT, args) do |reply|
+          if get.size > 1 && !store
+            reply.each_slice(get.size).to_a if reply
+          else
+            reply
+          end
+        end
+      end
+
+      def touch(*keys)
+        send_command(RequestType::TOUCH, keys.flatten)
+      end
+
+      def wait(*keys)
+        send_command(RequestType::WAIT, keys.flatten)
+      end
+
+      def waitof(*keys)
+        send_command(RequestType::WAIT_AOF, keys.flatten)
+      end
 
       # Determine the type stored at key.
       #
       # @param [String] key
       # @return [String] `string`, `list`, `set`, `zset`, `hash` or `none`
-      # def type(key)
-      #   send_command([:type, key])
-      # end
+      def type(key)
+        send_command(RequestType::TYPE, [key])
+      end
 
-      # def _scan(command, cursor, args, match: nil, count: nil, type: nil, &block)
-      #   # SSCAN/ZSCAN/HSCAN already prepend the key to +args+.
-      #
-      #   args << cursor
-      #   args << "MATCH" << match if match
-      #   args << "COUNT" << Integer(count) if count
-      #   args << "TYPE" << type if type
-      #
-      #   send_command([command] + args, &block)
-      # end
+      def _scan(command, cursor, args, match: nil, count: nil, type: nil, &block)
+        # SSCAN/ZSCAN/HSCAN already prepend the key to +args+.
+
+        args << cursor
+        args << "MATCH" << match if match
+        args << "COUNT" << Integer(count) if count
+        args << "TYPE" << type if type
+
+        send_command(command, args, &block)
+      end
     end
   end
 end

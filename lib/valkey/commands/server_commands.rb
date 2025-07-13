@@ -97,7 +97,7 @@ class Valkey
       def info(cmd = nil)
         send_command(RequestType::INFO, [cmd].compact) do |reply|
           if reply.is_a?(String)
-            reply = HashifyInfo.call(reply)
+            reply = Utils::HashifyInfo.call(reply)
 
             if cmd && cmd.to_s == "commandstats"
               # Extract nested hashes for INFO COMMANDSTATS

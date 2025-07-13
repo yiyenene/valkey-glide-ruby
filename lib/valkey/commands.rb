@@ -5,6 +5,7 @@ require "valkey/commands/connection_commands"
 require "valkey/commands/server_commands"
 require "valkey/commands/generic_commands"
 require "valkey/commands/bitmap_commands"
+require "valkey/commands/list_commands"
 
 class Valkey
   # Valkey commands module
@@ -25,29 +26,16 @@ class Valkey
     include ServerCommands
     include GenericCommands
     include BitmapCommands
+    include ListCommands
 
-    # # Commands returning 1 for true and 0 for false may be executed in a pipeline
-    # # where the method call will return nil. Propagate the nil instead of falsely
-    # # returning false.
-    # Boolify = lambda { |value|
-    #   value != 0 unless value.nil?
-    # }
+    # there are a few commands that are not implemented by design
     #
-    # BoolifySet = lambda { |value|
-    #   case value
-    #   when "OK"
-    #     true
-    #   when nil
-    #     false
-    #   else
-    #     value
-    #   end
-    # }
-    HashifyInfo = lambda { |reply|
-      lines = reply.split("\r\n").grep_v(/^(#|$)/)
-      lines.map! { |line| line.split(':', 2) }
-      lines.compact!
-      lines.to_h
-    }
+    # raises CommandError when called
+    #
+    %i[keys].each do |command|
+      define_method command do |*_args|
+        raise CommandError, "Unsupported command: #{command}"
+      end
+    end
   end
 end

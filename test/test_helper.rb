@@ -125,6 +125,22 @@ module Helper
       end
     end
 
+    def keys(pattern = "*")
+      list = []
+
+      loop do
+        cursor, keys = r.scan(0, match: pattern, count: 100)
+        list.concat(keys)
+        break if cursor == "0"
+      end
+
+      list
+    end
+
+    def all_keys
+      keys.sort
+    end
+
     def with_db(index)
       r.select(index)
       yield

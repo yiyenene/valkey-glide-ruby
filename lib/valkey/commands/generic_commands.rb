@@ -115,9 +115,9 @@ class Valkey
       #
       # @param  [String] key
       # @return [Integer] expiry time specified as number of seconds from UNIX Epoch
-      # def expiretime(key)
-      #   send_command([:expiretime, key])
-      # end
+      def expiretime(key)
+        send_command(RequestType::EXPIRE_TIME, [key])
+      end
 
       # Get the time to live (in seconds) for a key.
       #

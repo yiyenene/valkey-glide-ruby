@@ -214,5 +214,14 @@ module Lint
       assert_equal "s1", r.get("foo")
       assert_equal "s3", r.get("bar")
     end
+
+    def test_object
+      r.lpush "list", "value"
+
+      assert_equal 1, r.object(:refcount, "list")
+      encoding = r.object(:encoding, "list")
+      assert %w[ziplist quicklist listpack].include?(encoding), "Wrong encoding for list"
+      assert r.object(:idletime, "list").is_a?(Integer)
+    end
   end
 end

@@ -69,7 +69,7 @@ class Valkey
       # @param [String, Array<String>] value string value, or array of string values to push
       # @return [Integer] the length of the list after the push operation
       def lpush(key, value)
-        send_command([:lpush, key, value])
+        send_command(RequestType::LPUSH, [key, value])
       end
 
       # Prepend a value to a list, only if the list exists.

@@ -337,10 +337,17 @@ class Valkey
 
         send_command(RequestType::COPY, args)
       end
-      #
-      # def object(*args)
-      #   send_command([:object] + args)
-      # end
+
+      def object(subcommand, *args)
+        map = {
+          refcount: RequestType::OBJECT_REF_COUNT,
+          encoding: RequestType::OBJECT_ENCODING,
+          idletime: RequestType::OBJECT_IDLE_TIME,
+          freq: RequestType::OBJECT_FREQ
+        }
+
+        send_command(map[subcommand.to_sym], args.flatten)
+      end
 
       # Return a random key from the keyspace.
       #

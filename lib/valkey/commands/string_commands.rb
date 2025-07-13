@@ -97,7 +97,7 @@ class Valkey
 
         send_command(RequestType::SET, args)
         # if nx || xx
-        #   send_command(RequestType::SET, &BoolifySet))
+        #   send_command(RequestType::SET, &Utils::BoolifySet))
         # else
         #   send_command(RequestType::SET, args)
         # end

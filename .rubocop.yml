@@ -36,5 +36,6 @@ Metrics/MethodLength:
 Metrics/ModuleLength:
   Exclude:
     - 'lib/valkey/request_type.rb'
+    - 'lib/valkey/utils.rb'
     - 'test/**/*.rb'
 

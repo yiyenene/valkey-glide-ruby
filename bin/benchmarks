@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "valkey"
+
+require 'bundler/inline'
+
+gemfile do
+  gem 'redis', '5.4.0'
+  gem 'benchmark-ips', '2.14.0'
+end
+
+valkey = Valkey.new
+redis = Redis.new(driver: :ruby)
+
+str = "Hello, World!" * 1000
+
+operation = lambda { |client|
+  client.set("key", str)
+  client.get("key")
+}
+
+Benchmark.ips do |x|
+  x.config(warmup: 2, time: 5)
+
+  x.report("redis set and get") do
+    operation.call(redis)
+  end
+
+  x.report("valkey set and get") do
+    operation.call(valkey)
+  end
+
+  x.compare!
+end

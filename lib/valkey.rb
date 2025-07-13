@@ -10,10 +10,12 @@ require "valkey/protobuf/command_request_pb"
 require "valkey/protobuf/connection_request_pb"
 require "valkey/protobuf/response_pb"
 require "valkey/bindings"
+require "valkey/utils"
 require "valkey/commands"
 require "valkey/errors"
 
 class Valkey
+  include Utils
   include Commands
 
   def your_pubsub_callback(_client_ptr, kind, msg_ptr, msg_len, chan_ptr, chan_len, pat_ptr, pat_len)

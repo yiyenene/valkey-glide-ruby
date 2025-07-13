@@ -68,7 +68,7 @@ class Valkey
       # @param [String] key
       # @return [Boolean] whether the timeout was removed or not
       # def persist(key)
-      #   send_command([:persist, key], &Boolify)
+      #   send_command([:persist, key], &Utils::Boolify)
       # end
 
       # Set a key's time to live in seconds.
@@ -88,7 +88,7 @@ class Valkey
       #   args << "GT" if gt
       #   args << "LT" if lt
       #
-      #   send_command(args, &Boolify)
+      #   send_command(args, &Utils::Boolify)
       # end
 
       # Set the expiration for a key as a UNIX timestamp.
@@ -108,7 +108,7 @@ class Valkey
       #   args << "GT" if gt
       #   args << "LT" if lt
       #
-      #   send_command(args, &Boolify)
+      #   send_command(args, &Utils::Boolify)
       # end
 
       # Get a key's expiry time specified as number of seconds from UNIX Epoch
@@ -152,7 +152,7 @@ class Valkey
       #   args << "GT" if gt
       #   args << "LT" if lt
       #
-      #   send_command(args, &Boolify)
+      #   send_command(args, &Utils::Boolify)
       # end
 
       # Set the expiration for a key as number of milliseconds from UNIX Epoch.
@@ -172,7 +172,7 @@ class Valkey
       #   args << "GT" if gt
       #   args << "LT" if lt
       #
-      #   send_command(args, &Boolify)
+      #   send_command(args, &Utils::Boolify)
       # end
 
       # Get a key's expiry time specified as number of milliseconds from UNIX Epoch
@@ -319,7 +319,7 @@ class Valkey
       # @param [Integer] db
       # @return [Boolean] whether the key was moved or not
       # def move(key, db)
-      #   send_command([:move, key, db], &Boolify)
+      #   send_command([:move, key, db], &Utils::Boolify)
       # end
 
       # Copy a value from one key to another.
@@ -347,13 +347,13 @@ class Valkey
       # @param [Integer] db
       # @param [Boolean] replace removes the `destination` key before copying value to it
       # @return [Boolean] whether the key was copied or not
-      # def copy(source, destination, db: nil, replace: false)
-      #   command = [:copy, source, destination]
-      #   command << "DB" << db if db
-      #   command << "REPLACE" if replace
-      #
-      #   send_command(command, &Boolify)
-      # end
+      def copy(source, destination, db: nil, replace: false)
+        args = [source, destination]
+        args << "DB" << db if db
+        args << "REPLACE" if replace
+
+        send_command(RequestType::COPY, args)
+      end
       #
       # def object(*args)
       #   send_command([:object] + args)
@@ -381,7 +381,7 @@ class Valkey
       # @param [String] new_name
       # @return [Boolean] whether the key was renamed or not
       # def renamenx(old_name, new_name)
-      #   send_command([:renamenx, old_name, new_name], &Boolify)
+      #   send_command([:renamenx, old_name, new_name], &Utils::Boolify)
       # end
 
       # Sort the elements in a list, set or sorted set.

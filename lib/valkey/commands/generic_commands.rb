@@ -270,19 +270,17 @@ class Valkey
       #
       # @param [String, Array<String>] keys
       # @return [Integer]
-      # def exists(*keys)
-      #   send_command([:exists, *keys])
-      # end
+      def exists(*keys)
+        send_command(RequestType::EXISTS, keys.flatten)
+      end
 
       # Determine if any of the keys exists.
       #
       # @param [String, Array<String>] keys
       # @return [Boolean]
-      # def exists?(*keys)
-      #   send_command([:exists, *keys]) do |value|
-      #     value > 0
-      #   end
-      # end
+      def exists?(*keys)
+        send_command(RequestType::EXISTS, keys.flatten, &:positive?)
+      end
 
       # Move a key to another database.
       #

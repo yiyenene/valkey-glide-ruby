@@ -28,7 +28,7 @@ Metrics/CyclomaticComplexity:
   Enabled: false
 
 Metrics/MethodLength:
-  Max: 15
+  Max: 20
   Exclude:
     - 'lib/valkey.rb'
     - 'test/**/*.rb'

@@ -399,31 +399,31 @@ class Valkey
       #   elements where every element is an array with the result for every
       #   element specified in `:get`
       #   - when `:store` is specified, the number of elements in the stored result
-      # def sort(key, by: nil, limit: nil, get: nil, order: nil, store: nil)
-      #   args = [:sort, key]
-      #   args << "BY" << by if by
-      #
-      #   if limit
-      #     args << "LIMIT"
-      #     args.concat(limit)
-      #   end
-      #
-      #   get = Array(get)
-      #   get.each do |item|
-      #     args << "GET" << item
-      #   end
-      #
-      #   args.concat(order.split(" ")) if order
-      #   args << "STORE" << store if store
-      #
-      #   send_command(args) do |reply|
-      #     if get.size > 1 && !store
-      #       reply.each_slice(get.size).to_a if reply
-      #     else
-      #       reply
-      #     end
-      #   end
-      # end
+      def sort(key, by: nil, limit: nil, get: nil, order: nil, store: nil)
+        args = [key]
+        args << "BY" << by if by
+
+        if limit
+          args << "LIMIT"
+          args.concat(limit)
+        end
+
+        get = Array(get)
+        get.each do |item|
+          args << "GET" << item
+        end
+
+        args.concat(order.split(" ")) if order
+        args << "STORE" << store if store
+
+        send_command(RequestType::SORT, args) do |reply|
+          if get.size > 1 && !store
+            reply.each_slice(get.size).to_a if reply
+          else
+            reply
+          end
+        end
+      end
 
       # Determine the type stored at key.
       #

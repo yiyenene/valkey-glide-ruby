@@ -223,5 +223,94 @@ module Lint
       assert %w[ziplist quicklist listpack].include?(encoding), "Wrong encoding for list"
       assert r.object(:idletime, "list").is_a?(Integer)
     end
+
+    def test_persist
+      r.set("foo", "s1")
+      r.expire("foo", 1)
+      r.persist("foo")
+
+      assert(r.ttl("foo") == -1)
+    end
+
+    def test_pexpire
+      r.set("foo", "s1")
+      assert r.pexpire("foo", 2000)
+      assert_in_range 0..2, r.ttl("foo")
+    end
+
+    def test_pexpire_keywords
+      target_version "7.0.0" do
+        r.set("bar", "s2")
+        refute r.pexpire("bar", 5_000, xx: true)
+        assert r.pexpire("bar", 5_000, nx: true)
+        refute r.pexpire("bar", 5_000, nx: true)
+        assert r.pexpire("bar", 5_000, xx: true)
+
+        r.pexpire("bar", 10_000)
+        refute r.pexpire("bar", 15_000, lt: true)
+        refute r.pexpire("bar", 5_000, gt: true)
+        assert r.pexpire("bar", 15_000, gt: true)
+        assert r.pexpire("bar", 5_000, lt: true)
+      end
+    end
+
+    def test_pexpireat
+      r.set("foo", "s1")
+      assert r.pexpireat("foo", (Time.now + 2).to_i * 1_000)
+      assert_in_range 0..2, r.ttl("foo")
+    end
+
+    def test_pexpireat_keywords
+      target_version "7.0.0" do
+        r.set("bar", "s2")
+        refute r.pexpireat("bar", (Time.now + 5).to_i * 1_000, xx: true)
+        assert r.pexpireat("bar", (Time.now + 5).to_i * 1_000, nx: true)
+        refute r.pexpireat("bar", (Time.now + 5).to_i * 1_000, nx: true)
+        assert r.pexpireat("bar", (Time.now + 5).to_i * 1_000, xx: true)
+
+        r.pexpireat("bar", (Time.now + 10).to_i * 1_000)
+        refute r.pexpireat("bar", (Time.now + 15).to_i * 1_000, lt: true)
+        refute r.pexpireat("bar", (Time.now + 5).to_i * 1_000, gt: true)
+        assert r.pexpireat("bar", (Time.now + 15).to_i * 1_000, gt: true)
+        assert r.pexpireat("bar", (Time.now + 5).to_i * 1_000, lt: true)
+      end
+    end
+
+    def test_pexpiretime
+      target_version "7.0.0" do
+        r.set("foo", "blar")
+        assert_equal(-1, r.pexpiretime("foo"))
+
+        exp_time = (Time.now + 2).to_i * 1_000
+        r.pexpireat("foo", exp_time)
+        assert_equal exp_time, r.pexpiretime("foo")
+
+        assert_equal(-2, r.pexpiretime("key-that-exists-not"))
+      end
+    end
+
+    def test_pttl
+      r.set("foo", "s1")
+      r.expire("foo", 2)
+      assert_in_range 1..2000, r.pttl("foo")
+    end
+
+    def test_rename
+      r.set("foo", "s1")
+      r.rename "foo", "bar"
+
+      assert_equal "s1", r.get("bar")
+      assert_nil r.get("foo")
+    end
+
+    def test_renamenx
+      r.set("foo", "s1")
+      r.set("bar", "s2")
+
+      assert_equal false, r.renamenx("foo", "bar")
+
+      assert_equal "s1", r.get("foo")
+      assert_equal "s2", r.get("bar")
+    end
   end
 end

@@ -67,9 +67,9 @@ class Valkey
       #
       # @param [String] key
       # @return [Boolean] whether the timeout was removed or not
-      # def persist(key)
-      #   send_command([:persist, key], &Utils::Boolify)
-      # end
+      def persist(key)
+        send_command(RequestType::PERSIST, [key])
+      end
 
       # Set a key's time to live in seconds.
       #
@@ -145,15 +145,15 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def pexpire(key, milliseconds, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:pexpire, key, Integer(milliseconds)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Utils::Boolify)
-      # end
+      def pexpire(key, milliseconds, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(milliseconds)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::PEXPIRE, args)
+      end
 
       # Set the expiration for a key as number of milliseconds from UNIX Epoch.
       #
@@ -165,23 +165,23 @@ class Valkey
       #   - `:gt => true`: Set expiry only when the new expiry is greater than current one.
       #   - `:lt => true`: Set expiry only when the new expiry is less than current one.
       # @return [Boolean] whether the timeout was set or not
-      # def pexpireat(key, ms_unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
-      #   args = [:pexpireat, key, Integer(ms_unix_time)]
-      #   args << "NX" if nx
-      #   args << "XX" if xx
-      #   args << "GT" if gt
-      #   args << "LT" if lt
-      #
-      #   send_command(args, &Utils::Boolify)
-      # end
+      def pexpireat(key, ms_unix_time, nx: nil, xx: nil, gt: nil, lt: nil)
+        args = [key, Integer(ms_unix_time)]
+        args << "NX" if nx
+        args << "XX" if xx
+        args << "GT" if gt
+        args << "LT" if lt
+
+        send_command(RequestType::PEXPIRE_AT, args)
+      end
 
       # Get a key's expiry time specified as number of milliseconds from UNIX Epoch
       #
       # @param  [String] key
       # @return [Integer] expiry time specified as number of milliseconds from UNIX Epoch
-      # def pexpiretime(key)
-      #   send_command([:pexpiretime, key])
-      # end
+      def pexpiretime(key)
+        send_command(RequestType::PEXPIRE_TIME, [key])
+      end
 
       # Get the time to live (in milliseconds) for a key.
       #
@@ -194,9 +194,9 @@ class Valkey
       #
       #     - The command returns -2 if the key does not exist.
       #     - The command returns -1 if the key exists but has no associated expire.
-      # def pttl(key)
-      #   send_command([:pttl, key])
-      # end
+      def pttl(key)
+        send_command(RequestType::PTTL, [key])
+      end
 
       # Return a serialized version of the value stored at a key.
       #
@@ -352,27 +352,27 @@ class Valkey
       # Return a random key from the keyspace.
       #
       # @return [String]
-      # def randomkey
-      #   send_command([:randomkey])
-      # end
+      def randomkey
+        send_command(RequestType::RANDOM_KEY)
+      end
 
       # Rename a key. If the new key already exists it is overwritten.
       #
       # @param [String] old_name
       # @param [String] new_name
       # @return [String] `OK`
-      # def rename(old_name, new_name)
-      #   send_command([:rename, old_name, new_name])
-      # end
+      def rename(old_name, new_name)
+        send_command(RequestType::RENAME, [old_name, new_name])
+      end
 
       # Rename a key, only if the new key does not exist.
       #
       # @param [String] old_name
       # @param [String] new_name
       # @return [Boolean] whether the key was renamed or not
-      # def renamenx(old_name, new_name)
-      #   send_command([:renamenx, old_name, new_name], &Utils::Boolify)
-      # end
+      def renamenx(old_name, new_name)
+        send_command(RequestType::RENAME_NX, [old_name, new_name])
+      end
 
       # Sort the elements in a list, set or sorted set.
       #

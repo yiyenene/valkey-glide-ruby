@@ -11,16 +11,14 @@ class Valkey
       #
       # @return [String] `OK`
       def bgrewriteaof
-        # TODO: not implemented yet
-        # send_command([:bgrewriteaof])
+        send_command(RequestType::BG_REWRITE_AOF)
       end
 
       # Asynchronously save the dataset to disk.
       #
       # @return [String] `OK`
       def bgsave
-        # TODO: not implemented yet
-        # send_command([:bgsave])
+        send_command(RequestType::BG_SAVE)
       end
 
       # Get or set server configuration parameters.
@@ -116,7 +114,7 @@ class Valkey
       #
       # @return [Integer]
       def lastsave
-        send_command([:lastsave])
+        send_command(RequestType::LAST_SAVE)
       end
 
       # Listen for all requests received by the server in real time.
@@ -139,7 +137,7 @@ class Valkey
       #
       # @return [String]
       def save
-        send_command([:save])
+        send_command(RequestType::SAVE)
       end
 
       # Synchronously save the dataset to disk and then shut down the server.
@@ -156,7 +154,7 @@ class Valkey
 
       # Make the server a slave of another instance, or promote it as master.
       def slaveof(host, port)
-        send_command([:slaveof, host, port])
+        send_command(RequestType::SLAVE_OF, [host, port])
       end
 
       # Interact with the slowlog (get, len, reset)
@@ -172,7 +170,7 @@ class Valkey
 
       # Internal command used for replication.
       def sync
-        send_command([:sync])
+        send_command(RequestType::SYNC)
       end
 
       # Return the server time.
@@ -183,11 +181,10 @@ class Valkey
       # @return [Array<Integer>] tuple of seconds since UNIX epoch and
       #   microseconds in the current second
       def time
-        send_command([:time]) do |reply|
-          reply&.map(&:to_i)
-        end
+        send_command(RequestType::TIME)
       end
 
+      # RequestType::DEBUG not exist
       def debug(*args)
         send_command(RequestType::DEBUG, args)
       end

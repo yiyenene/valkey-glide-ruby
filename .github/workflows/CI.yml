@@ -39,13 +39,13 @@ jobs:
           - 2.6
           - jruby
         valkey:
-          - 7.0
-          - 7.2.9
+          - 7.2.10
           - 8
+          - 8.1
 
     services:
       valkey:
-        image: valkey/valkey:8
+        image: valkey/valkey:${{ matrix.valkey }}
         ports:
           - 6379:6379
         options: >-

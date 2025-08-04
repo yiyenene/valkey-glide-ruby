@@ -155,6 +155,14 @@ class Valkey
 
         # technically it has to return a Hash, but as of now we return just one pair
         map.to_a.flatten(1) # Flatten to get pairs
+      when ResponseType::SETS
+        ptr = result[:sets_value]
+        count = result[:sets_value_len].to_i
+
+        Array.new(count) do |i|
+          item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
+          convert_response.call(item)
+        end
       when ResponseType::NULL
         nil
       when ResponseType::OK

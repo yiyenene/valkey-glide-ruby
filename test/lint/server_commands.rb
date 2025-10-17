@@ -176,7 +176,7 @@ module Lint
 
     def test_client_kill
       # Create a second client connection
-      extra_client = Valkey.new
+      extra_client = Valkey.new(host: HOST, port: PORT, timeout: TIMEOUT)
       sleep(0.5) # Ensure the new client created
 
       addr = extra_client.client(:info)[/addr=(\S+)/, 1]
@@ -190,7 +190,7 @@ module Lint
     end
 
     def test_client_kill_simple
-      extra_client = Valkey.new
+      extra_client = Valkey.new(host: HOST, port: PORT, timeout: TIMEOUT)
       sleep(0.5) # Give it a moment to register with the server
 
       addr = extra_client.client(:info)[/addr=(\S+)/, 1]

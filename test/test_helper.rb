@@ -15,13 +15,14 @@ Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 $VERBOSE = true
 
+HOST        = ENV.fetch('VALKEY_HOST', "127.0.0.1")
 PORT        = 6379
 DB          = 15
 TIMEOUT = Float(ENV["TIMEOUT"] || 5.0) # Increased from 3.0 to 5.0 for CI stability
 LOW_TIMEOUT = Float(ENV["LOW_TIMEOUT"] || 0.01) # for blocking-command tests
 
 CLUSTER_NODES = 6.times.map do |i|
-  { host: "127.0.0.1", port: 7000 + i }
+  { host: HOST, port: 7000 + i }
 end
 
 Dir[File.expand_path("lint/**/*.rb", __dir__)].sort.each do |f|

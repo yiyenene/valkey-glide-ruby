@@ -1,0 +1,45 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Documentation
+*.md
+!README.md
+LICENSE
+.yardopts
+
+# Docker
+Dockerfile
+compose.yml
+docker-compose.yml
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+log/
+*.log
+
+# Test coverage
+coverage/
+
+# Build artifacts
+pkg/
+*.gem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.travis.yml
+.circleci/
+appveyor.yml
+

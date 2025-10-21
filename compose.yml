@@ -1,0 +1,195 @@
+services:
+  # Ruby development environment
+  app:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    environment:
+      - BUNDLE_PATH=/usr/local/bundle
+      - VALKEY_HOST=valkey
+    depends_on:
+      - valkey
+    stdin_open: true
+    tty: true
+    init: true
+    command: sleep infinity
+
+  # Valkey standalone server (default)
+  valkey:
+    image: valkey/valkey:7.2
+    ports:
+      - "6379:6379"
+    command: valkey-server --protected-mode no
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Valkey cluster nodes (optional, use with --profile cluster)
+  valkey-cluster-1:
+    image: valkey/valkey:7.2
+    ports:
+      - "7000:7000"
+      - "17000:17000"
+    command: >
+      valkey-server
+      --port 7000
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --protected-mode no
+    profiles:
+      - cluster
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "7000", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-cluster-2:
+    image: valkey/valkey:7.2
+    ports:
+      - "7001:7001"
+      - "17001:17001"
+    command: >
+      valkey-server
+      --port 7001
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --protected-mode no
+    profiles:
+      - cluster
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "7001", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-cluster-3:
+    image: valkey/valkey:7.2
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    command: >
+      valkey-server
+      --port 7002
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --protected-mode no
+    profiles:
+      - cluster
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "7002", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-cluster-4:
+    image: valkey/valkey:7.2
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    command: >
+      valkey-server
+      --port 7003
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --protected-mode no
+    profiles:
+      - cluster
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "7003", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-cluster-5:
+    image: valkey/valkey:7.2
+    ports:
+      - "7004:7004"
+      - "17004:17004"
+    command: >
+      valkey-server
+      --port 7004
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --protected-mode no
+    profiles:
+      - cluster
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "7004", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-cluster-6:
+    image: valkey/valkey:7.2
+    ports:
+      - "7005:7005"
+      - "17005:17005"
+    command: >
+      valkey-server
+      --port 7005
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --protected-mode no
+    profiles:
+      - cluster
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "7005", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Initialize cluster (runs once)
+  cluster-init:
+    image: valkey/valkey:7.2
+    depends_on:
+      valkey-cluster-1:
+        condition: service_healthy
+      valkey-cluster-2:
+        condition: service_healthy
+      valkey-cluster-3:
+        condition: service_healthy
+      valkey-cluster-4:
+        condition: service_healthy
+      valkey-cluster-5:
+        condition: service_healthy
+      valkey-cluster-6:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for cluster nodes to be ready...' &&
+        sleep 5 &&
+        valkey-cli --cluster create
+        valkey-cluster-1:7000
+        valkey-cluster-2:7001
+        valkey-cluster-3:7002
+        valkey-cluster-4:7003
+        valkey-cluster-5:7004
+        valkey-cluster-6:7005
+        --cluster-replicas 1
+        --cluster-yes
+      "
+    profiles:
+      - cluster
+
+volumes:
+  bundle_cache:
+

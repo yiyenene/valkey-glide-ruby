@@ -23,7 +23,7 @@ module Helper
     private
 
     def _new_client(options = {})
-      Valkey.new(options.merge(port: PORT, timeout: TIMEOUT))
+      Valkey.new(options.merge(host: HOST, port: PORT, timeout: TIMEOUT))
     end
   end
 end

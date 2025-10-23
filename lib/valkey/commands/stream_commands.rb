@@ -121,7 +121,10 @@ class Valkey
           next response unless request == RequestType::X_GROUP_DESTROY
           # Even though the document says it returns an Integer, I don't know why GLIDE returns a boolean
           # as a result of XGROUP DESTROY.
-          response == true ? 1 : 0
+          next 1 if response == true
+          next 0 if response == false
+
+          response
         end
       end
     end

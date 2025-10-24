@@ -306,6 +306,145 @@ class Valkey
         _xread(RequestType::X_READ_GROUP, args, keys, ids, block)
       end
 
+      # Removes one or multiple entries from the pending entries list of a stream consumer group.
+      #
+      # @example With a entry id
+      #   valkey.xack('mystream', 'mygroup', '1526569495631-0')
+      # @example With splatted entry ids
+      #   valkey.xack('mystream', 'mygroup', '0-1', '0-2')
+      # @example With arrayed entry ids
+      #   valkey.xack('mystream', 'mygroup', %w[0-1 0-2])
+      #
+      # @param key   [String]        the stream key
+      # @param group [String]        the consumer group name
+      # @param ids   [Array<String>] one or multiple entry ids
+      #
+      # @return [Integer] the number of entries successfully acknowledged
+      def xack(key, group, *ids)
+        # To keep compatibility with Redis
+        raise TypeError, "key cannot be nil" if key.nil?
+        raise TypeError, "group cannot be nil" if group.nil?
+
+        args = [key, group].concat(ids.flatten)
+        send_command(RequestType::X_ACK, args)
+      end
+
+      # Changes the ownership of a pending entry
+      #
+      # @example With splatted entry ids
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, '0-1', '0-2')
+      # @example With arrayed entry ids
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, %w[0-1 0-2])
+      # @example With idle option
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, %w[0-1 0-2], idle: 1000)
+      # @example With time option
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, %w[0-1 0-2], time: 1542866959000)
+      # @example With retrycount option
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, %w[0-1 0-2], retrycount: 10)
+      # @example With force option
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, %w[0-1 0-2], force: true)
+      # @example With justid option
+      #   valkey.xclaim('mystream', 'mygroup', 'consumer1', 3600000, %w[0-1 0-2], justid: true)
+      #
+      # @param key           [String]        the stream key
+      # @param group         [String]        the consumer group name
+      # @param consumer      [String]        the consumer name
+      # @param min_idle_time [Integer]       the number of milliseconds
+      # @param ids           [Array<String>] one or multiple entry ids
+      # @param opts          [Hash]          several options for `XCLAIM` command
+      #
+      # @option opts [Integer] :idle       the number of milliseconds as last time it was delivered of the entry
+      # @option opts [Integer] :time       the number of milliseconds as a specific Unix Epoch time
+      # @option opts [Integer] :retrycount the number of retry counter
+      # @option opts [Boolean] :force      whether to create the pending entry to the pending entries list or not
+      # @option opts [Boolean] :justid     whether to fetch just an array of entry ids or not
+      #
+      # @return [Hash{String => Hash}] the entries successfully claimed
+      # @return [Array<String>]        the entry ids successfully claimed if justid option is `true`
+      def xclaim(key, group, consumer, min_idle_time, *ids, **opts)
+        # To keep compatibility with Redis
+        raise TypeError, "key cannot be nil" if key.nil?
+        raise TypeError, "group cannot be nil" if group.nil?
+
+        args = [key, group, consumer, min_idle_time].concat(ids.flatten)
+        args.concat(['IDLE',       opts[:idle].to_i])  if opts[:idle]
+        args.concat(['TIME',       opts[:time].to_i])  if opts[:time]
+        args.concat(['RETRYCOUNT', opts[:retrycount]]) if opts[:retrycount]
+        args << 'FORCE'                                if opts[:force]
+        args << 'JUSTID'                               if opts[:justid]
+        blk = opts[:justid] ? Utils::Noop : Utils::HashifyStreamEntries
+        send_command(RequestType::X_CLAIM, args, &blk)
+      end
+
+      # Transfers ownership of pending stream entries that match the specified criteria.
+      #
+      # @example Claim next pending message stuck > 5 minutes  and mark as retry
+      #   valkey.xautoclaim('mystream', 'mygroup', 'consumer1', 3600000, '0-0')
+      # @example Claim 50 next pending messages stuck > 5 minutes  and mark as retry
+      #   valkey.xautoclaim('mystream', 'mygroup', 'consumer1', 3600000, '0-0', count: 50)
+      # @example Claim next pending message stuck > 5 minutes and don't mark as retry
+      #   valkey.xautoclaim('mystream', 'mygroup', 'consumer1', 3600000, '0-0', justid: true)
+      # @example Claim next pending message after this id stuck > 5 minutes  and mark as retry
+      #   redis.xautoclaim('mystream', 'mygroup', 'consumer1', 3600000, '1641321233-0')
+      #
+      # @param key           [String]        the stream key
+      # @param group         [String]        the consumer group name
+      # @param consumer      [String]        the consumer name
+      # @param min_idle_time [Integer]       the number of milliseconds
+      # @param start         [String]        entry id to start scanning from or 0-0 for everything
+      # @param count         [Integer]       number of messages to claim (default 1)
+      # @param justid        [Boolean]       whether to fetch just an array of entry ids or not.
+      #                                      Does not increment retry count when true
+      #
+      # @return [Hash{String => Hash}] the entries successfully claimed
+      # @return [Array<String>]        the entry ids successfully claimed if justid option is `true`
+      def xautoclaim(key, group, consumer, min_idle_time, start, count: nil, justid: false)
+        args = [key, group, consumer, min_idle_time, start]
+        if count
+          args << 'COUNT' << count.to_s
+        end
+        args << 'JUSTID' if justid
+        blk = justid ? Utils::HashifyStreamAutoclaimJustId : Utils::HashifyStreamAutoclaim
+        send_command(RequestType::X_AUTO_CLAIM, args, &blk)
+      end
+
+      # Fetches not acknowledging pending entries
+      #
+      # @example With key and group
+      #   valkey.xpending('mystream', 'mygroup')
+      # @example With range options
+      #   valkey.xpending('mystream', 'mygroup', '-', '+', 10)
+      # @example With range and idle time options
+      #   valkey.xpending('mystream', 'mygroup', '-', '+', 10, idle: 9000)
+      # @example With range and consumer options
+      #   valkey.xpending('mystream', 'mygroup', '-', '+', 10, 'consumer1')
+      #
+      # @param key      [String]  the stream key
+      # @param group    [String]  the consumer group name
+      # @param start    [String]  start first entry id of range
+      # @param end      [String]  end   last entry id of range
+      # @param count    [Integer] count the number of entries as limit
+      # @param consumer [String]  the consumer name
+      #
+      # @option opts [Integer] :idle       pending message minimum idle time in milliseconds
+      #
+      # @return [Hash]        the summary of pending entries
+      # @return [Array<Hash>] the pending entries details if options were specified
+      def xpending(key, group, *args, idle: nil)
+        command_args = [key, group]
+        command_args << 'IDLE' << Integer(idle) if idle
+        case args.size
+        when 0, 3, 4
+          command_args.concat(args)
+        else
+          raise ArgumentError, "wrong number of arguments (given #{args.size + 2}, expected 2, 5 or 6)"
+        end
+
+        summary_needed = args.empty?
+        blk = summary_needed ? Utils::HashifyStreamPendings : Utils::HashifyStreamPendingDetails
+        send_command(RequestType::X_PENDING, command_args, &blk)
+      end
+
       private
 
       def _xread(request, args, keys, ids, _blocking_timeout_msec)

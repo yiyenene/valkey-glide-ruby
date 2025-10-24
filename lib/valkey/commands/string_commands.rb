@@ -332,7 +332,8 @@ class Valkey
         args << "MINMATCHLEN" << min_match_len if min_match_len
         args << "WITHMATCHLEN" if with_match_len
 
-        send_command(RequestType::LCS, args)
+        blk = idx ? Utils::Arrayify : Utils::Noop
+        send_command(RequestType::LCS, args, &blk)
       end
     end
   end

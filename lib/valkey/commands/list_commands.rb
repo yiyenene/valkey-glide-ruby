@@ -216,7 +216,7 @@ class Valkey
         args = [timeout, keys.size, *keys, modifier]
         args << "COUNT" << Integer(count) if count
 
-        send_command(RequestType::BLMPOP, args)
+        send_command(RequestType::BLMPOP, args, &Utils::Arrayify)
       end
 
       # Pops one or more elements from the first non-empty list key from the list
@@ -244,7 +244,7 @@ class Valkey
 
         # pp args
 
-        send_command(RequestType::LMPOP, args)
+        send_command(RequestType::LMPOP, args, &Utils::Arrayify)
       end
 
       # Get an element from a list by its index.

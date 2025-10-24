@@ -158,8 +158,6 @@ class Valkey
         map_key = recursive_convert_response(Bindings::CommandResponse.new(item[:map_key]))
         map_value = recursive_convert_response(Bindings::CommandResponse.new(item[:map_value]))
 
-        map_value = map_value.flatten(1) if detect_array_of_pairs(map_value)
-
         [map_key, map_value]
       end.to_h
     when ResponseType::SETS

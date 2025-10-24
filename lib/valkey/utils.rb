@@ -35,6 +35,23 @@ class Valkey
       end
     }
 
+    Arrayify = lambda { |value|
+      case value
+      when nil
+        nil
+      when Hash
+        value.to_a.flatten(1)
+      when Array
+        value
+      else
+        if value.respond_to?(:to_a)
+          value.to_a
+        else
+          [value]
+        end
+      end
+    }
+
     Pairify = lambda { |value|
       if value.respond_to?(:each_slice)
         value.each_slice(2).to_a
@@ -61,9 +78,20 @@ class Valkey
     }
 
     FloatifyPairs = lambda { |value|
-      return value unless value.respond_to?(:each_slice)
-
-      value.each_slice(2).map(&FloatifyPair)
+      case value
+      when Hash
+        value.to_a.map(&FloatifyPair)
+      when Array
+        if value.empty? || value[0].is_a?(Array)
+          # returned as pairs: [["a", 0], ["b", 1]]
+          value.map(&FloatifyPair)
+        else
+          # flat array
+          value.each_slice(2).map(&FloatifyPair)
+        end
+      else
+        value.each_slice(2).map(&FloatifyPair)
+      end
     }
 
     HashifyInfo = lambda { |reply|
@@ -89,7 +117,7 @@ class Valkey
       reply.map do |entry_id, values|
         case values
         when Array
-          [entry_id, values&.each_slice(2)&.to_h]
+          [entry_id, values.to_h]
         else
           [entry_id, values]
         end
@@ -100,7 +128,7 @@ class Valkey
       {
         'next' => reply[0],
         'entries' => reply[1].compact.map do |entry, values|
-          [entry, values.each_slice(2)&.to_h]
+          [entry, values.to_h]
         end
       }
     }

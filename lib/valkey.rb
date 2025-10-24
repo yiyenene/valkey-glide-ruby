@@ -151,23 +151,17 @@ class Valkey
 
       ptr = result[:array_value]
       count = result[:array_value_len].to_i
-      mapped_arr = 
-        Array.new(count) do |i|
-          item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
 
-          map_key = recursive_convert_response(Bindings::CommandResponse.new(item[:map_key]))
-          map_value = recursive_convert_response(Bindings::CommandResponse.new(item[:map_value]))
+      Array.new(count) do |i|
+        item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
 
-          map_value = map_value.flatten(1) if detect_array_of_pairs(map_value)
-          
-          [map_key, map_value]
-        end
-      
-      if count > 0 && mapped_arr[0][1].is_a?(Array)
-        mapped_arr
-      else
-        mapped_arr.flatten(1)
-      end
+        map_key = recursive_convert_response(Bindings::CommandResponse.new(item[:map_key]))
+        map_value = recursive_convert_response(Bindings::CommandResponse.new(item[:map_value]))
+
+        map_value = map_value.flatten(1) if detect_array_of_pairs(map_value)
+
+        [map_key, map_value]
+      end.to_h
     when ResponseType::SETS
       ptr = result[:sets_value]
       count = result[:sets_value_len].to_i
@@ -186,8 +180,7 @@ class Valkey
   end
 
   def detect_array_of_pairs(object)
-    # Believe that Glide won't return mixed array of pairs and non-pairs
-    object.is_a?(Array) && object[0].is_a?(Array) && object[0].size == 2
+    object.is_a?(Array) && !object.empty? && object.all? { |item| item.is_a?(Array) && item.size == 2 }
   end
 
   def send_command(command_type, command_args = [], &block)        # Validate connection

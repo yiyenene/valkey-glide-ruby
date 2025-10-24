@@ -24,18 +24,20 @@ class Valkey
       # @return [Array<Hash>] information of the consumer groups if subcommand is `groups`
       # @return [Array<Hash>] information of the consumers if subcommand is `consumers`
       def xinfo(subcommand, key, group = nil)
-        request, block =
+        request =
           case subcommand.to_s.downcase
           when 'stream'
-            [RequestType::X_INFO_STREAM, Utils::Hashify]
+            RequestType::X_INFO_STREAM
           when 'groups'
-            [RequestType::X_INFO_GROUPS, proc { |r| r.map(&Utils::Hashify)}]
+            RequestType::X_INFO_GROUPS
           when 'consumers'
-            [RequestType::X_INFO_CONSUMERS, proc { |r| r.map(&Utils::Hashify)}]
+            RequestType::X_INFO_CONSUMERS
+          else
+            RequestType::INVALID_REQUEST
           end
         args = [key, group].compact
 
-        send_command(request || RequestType::INVALID_REQUEST, args, &block)
+        send_command(request, args)
       end
 
       # Add new entry to the stream.
@@ -180,6 +182,45 @@ class Valkey
         send_command(RequestType::X_REV_RANGE, args, &Utils::HashifyStreamEntries)
       end
 
+      # Returns the number of entries inside a stream.
+      #
+      # @example With key
+      #   valkey.xlen('mystream')
+      #
+      # @param key [String] the stream key
+      #
+      # @return [Integer] the number of entries
+      def xlen(key)
+        # To keep compatibility with Redis
+        raise TypeError, "key cannot be nil" if key.nil?
+
+        send_command(RequestType::X_LEN, [key])
+      end
+
+      # Fetches entries from one or multiple streams. Optionally blocking.
+      #
+      # @example With a key
+      #   valkey.xread('mystream', '0-0')
+      # @example With multiple keys
+      #   valkey.xread(%w[mystream1 mystream2], %w[0-0 0-0])
+      # @example With count option
+      #   valkey.xread('mystream', '0-0', count: 2)
+      # @example With block option
+      #   valkey.xread('mystream', '$', block: 1000)
+      #
+      # @param keys  [Array<String>] one or multiple stream keys
+      # @param ids   [Array<String>] one or multiple entry ids
+      # @param count [Integer]       the number of entries as limit per stream
+      # @param block [Integer]       the number of milliseconds as blocking timeout
+      #
+      # @return [Hash{String => Hash{String => Hash}}] the entries
+      def xread(keys, ids, count: nil, block: nil)
+        args = []
+        args << 'COUNT' << count if count
+        args << 'BLOCK' << block.to_i if block
+        _xread(RequestType::X_READ, args, keys, ids, block)
+      end
+
       # Manages the consumer group of the stream.
       #
       # @example With `create` subcommand
@@ -222,14 +263,60 @@ class Valkey
         args = [key, group, id_or_consumer, (mkstream ? 'MKSTREAM' : nil)].compact
 
         send_command(request, args) do |response|
-          next response unless request == RequestType::X_GROUP_DESTROY
+          next response unless [RequestType::X_GROUP_CREATE_CONSUMER, RequestType::X_GROUP_DESTROY].include?(request)
           # Even though the document says it returns an Integer, I don't know why GLIDE returns a boolean
-          # as a result of XGROUP DESTROY.
+          # as a result of XGROUP CREATE_CONSUMER and XGROUP DESTROY.
           next 1 if response == true
           next 0 if response == false
 
           response
         end
+      end
+
+      # Fetches a subset of the entries from one or multiple streams related with the consumer group.
+      # Optionally blocking.
+      #
+      # @example With a key
+      #   valkey.xreadgroup('mygroup', 'consumer1', 'mystream', '>')
+      # @example With multiple keys
+      #   valkey.xreadgroup('mygroup', 'consumer1', %w[mystream1 mystream2], %w[> >])
+      # @example With count option
+      #   valkey.xreadgroup('mygroup', 'consumer1', 'mystream', '>', count: 2)
+      # @example With block option
+      #   valkey.xreadgroup('mygroup', 'consumer1', 'mystream', '>', block: 1000)
+      # @example With noack option
+      #   valkey.xreadgroup('mygroup', 'consumer1', 'mystream', '>', noack: true)
+      #
+      # @param group    [String]        the consumer group name
+      # @param consumer [String]        the consumer name
+      # @param keys     [Array<String>] one or multiple stream keys
+      # @param ids      [Array<String>] one or multiple entry ids
+      # @param opts     [Hash]          several options for `XREADGROUP` command
+      #
+      # @option opts [Integer] :count the number of entries as limit
+      # @option opts [Integer] :block the number of milliseconds as blocking timeout
+      # @option opts [Boolean] :noack whether message loss is acceptable or not
+      #
+      # @return [Hash{String => Hash{String => Hash}}] the entries
+      def xreadgroup(group, consumer, keys, ids, count: nil, block: nil, noack: nil)
+        args = ['GROUP', group, consumer]
+        args << 'COUNT' << count if count
+        args << 'BLOCK' << block.to_i if block
+        args << 'NOACK' if noack
+        _xread(RequestType::X_READ_GROUP, args, keys, ids, block)
+      end
+
+      private
+
+      def _xread(request, args, keys, ids, _blocking_timeout_msec)
+        keys = keys.is_a?(Array) ? keys : [keys]
+        ids = ids.is_a?(Array) ? ids : [ids]
+        args << 'STREAMS'
+        args.concat(keys)
+        args.concat(ids)
+
+        # @todo reproduce the behavior of Redis
+        send_command(request, args, &Utils::HashifyStreams)
       end
     end
   end

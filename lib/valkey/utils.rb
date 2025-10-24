@@ -26,7 +26,9 @@ class Valkey
     }
 
     Hashify = lambda { |value|
-      if value.respond_to?(:each_slice)
+      if value.is_a?(Hash)
+        value
+      elsif value.respond_to?(:each_slice)
         value.each_slice(2).to_h
       else
         value
@@ -76,7 +78,7 @@ class Valkey
       when nil
         {}
       else
-        reply.transform_values { |entries| HashifyStreamEntries.call(entries) }
+        reply.map { |key, entries| [key, HashifyStreamEntries.call(entries)] }.to_h
       end
     }
 
@@ -84,8 +86,13 @@ class Valkey
     private_constant :EMPTY_STREAM_RESPONSE
 
     HashifyStreamEntries = lambda { |reply|
-      reply.compact.map do |entry_id, values|
-        [entry_id, values&.each_slice(2)&.to_h]
+      reply.map do |entry_id, values|
+        case values
+        when Array
+          [entry_id, values&.each_slice(2)&.to_h]
+        else
+          [entry_id, values]
+        end
       end
     }
 

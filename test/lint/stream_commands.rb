@@ -106,49 +106,6 @@ module Lint
       assert_raises(Valkey::CommandError) { r.xadd('s1', {}) }
     end
 
-    def test_xgroup_with_create_subcommand
-      r.xadd('s1', { f: 'v' })
-      assert_equal 'OK', r.xgroup(:create, 's1', 'g1', '$')
-    end
-
-    def test_xgroup_with_create_subcommand_and_mkstream_option
-      err_msg = 'ERR The XGROUP subcommand requires the key to exist. '\
-        'Note that for CREATE you may want to use the MKSTREAM option to create an empty stream automatically.'
-      assert_raises(Valkey::CommandError, err_msg) { r.xgroup(:create, 's2', 'g1', '$') }
-      assert_equal 'OK', r.xgroup(:create, 's2', 'g1', '$', mkstream: true)
-    end
-
-    def test_xgroup_with_create_subcommand_and_existed_stream_key
-      r.xadd('s1', { f: 'v' })
-      r.xgroup(:create, 's1', 'g1', '$')
-      assert_raises(Valkey::CommandError, 'BUSYGROUP Consumer Group name already exists') do
-        r.xgroup(:create, 's1', 'g1', '$')
-      end
-    end
-
-    def test_xgroup_with_setid_subcommand
-      r.xadd('s1', { f: 'v' })
-      r.xgroup(:create, 's1', 'g1', '$')
-      assert_equal 'OK', r.xgroup(:setid, 's1', 'g1', '0')
-    end
-
-    def test_xgroup_with_destroy_subcommand
-      r.xadd('s1', { f: 'v' })
-      r.xgroup(:create, 's1', 'g1', '$')
-      assert_equal 1, r.xgroup(:destroy, 's1', 'g1')
-    end
-
-    def test_xgroup_with_delconsumer_subcommand
-      r.xadd('s1', { f: 'v' })
-      r.xgroup(:create, 's1', 'g1', '$')
-      assert_equal 0, r.xgroup(:delconsumer, 's1', 'g1', 'c1')
-    end
-
-    def test_xgroup_with_invalid_arguments
-      assert_raises(Valkey::CommandError) { r.xgroup(nil, nil, nil) }
-      assert_raises(Valkey::CommandError) { r.xgroup('', '', '') }
-    end
-
     def test_xtrim
       r.xadd('s1', { f: 'v1' })
       r.xadd('s1', { f: 'v2' })
@@ -393,6 +350,209 @@ module Lint
     def test_xrevrange_with_invalid_arguments
       assert_raises(TypeError) { r.xrevrange(nil) }
       assert_equal([], r.xrevrange(''))
+    end
+
+    def test_xlen
+      r.xadd('s1', { f: 'v1' })
+      r.xadd('s1', { f: 'v2' })
+      assert_equal 2, r.xlen('s1')
+    end
+
+    def test_xlen_with_not_existed_key
+      assert_equal 0, r.xlen('not-existed')
+    end
+
+    def test_xlen_with_invalid_key
+      assert_raises(TypeError) { r.xlen(nil) }
+      assert_equal 0, r.xlen('')
+    end
+
+    def test_xread_with_a_key
+      r.xadd('s1', { f: 'v1' }, id: '0-1')
+      r.xadd('s1', { f: 'v2' }, id: '0-2')
+
+      actual = r.xread('s1', 0)
+
+      assert_equal(%w(v1 v2), actual.fetch('s1').map { |i| i.last['f'] })
+    end
+
+    def test_xread_with_multiple_keys
+      r.xadd('s1', { f: 'v01' }, id: '0-1')
+      r.xadd('s1', { f: 'v02' }, id: '0-2')
+      r.xadd('s2', { f: 'v11' }, id: '1-1')
+      r.xadd('s2', { f: 'v12' }, id: '1-2')
+
+      actual = r.xread(%w[s1 s2], %w[0-1 1-1])
+
+      assert_equal 1, actual['s1'].size
+      assert_equal 1, actual['s2'].size
+      assert_equal 'v02', actual['s1'][0].last['f']
+      assert_equal 'v12', actual['s2'][0].last['f']
+    end
+
+    def test_xread_with_count_option
+      r.xadd('s1', { f: 'v1' }, id: '0-1')
+      r.xadd('s1', { f: 'v2' }, id: '0-2')
+
+      actual = r.xread('s1', 0, count: 1)
+
+      assert_equal 1, actual['s1'].size
+    end
+
+    def test_xread_with_block_option
+      actual = r.xread('s1', '$', block: LOW_TIMEOUT * 1000)
+      assert_equal({}, actual)
+    end
+
+    def test_xread_does_not_raise_timeout_error_when_the_block_option_is_zero_msec
+      prepared = false
+      actual = nil
+      thread = Thread.new do
+        prepared = true
+        actual = r.xread('s1', 0, block: 0)
+      ensure
+        prepared = true
+      end
+      Thread.pass until prepared
+      r2 = init _new_client
+      r2.xadd('s1', { f: 'v1' }, id: '0-1')
+      thread.join(3)
+
+      assert_equal(['v1'], actual.fetch('s1').map { |i| i.last['f'] })
+    end
+
+    def test_xread_with_invalid_arguments
+      assert_raises(Valkey::CommandError) { r.xread(nil, nil) }
+      assert_raises(Valkey::CommandError) { r.xread('', '') }
+      assert_raises(Valkey::CommandError) { r.xread([], []) }
+      assert_raises(Valkey::CommandError) { r.xread([''], ['']) }
+      assert_raises(Valkey::CommandError) { r.xread('s1', '0-0', count: 'a') }
+      assert_raises(Valkey::CommandError) { r.xread('s1', %w[0-0 0-0]) }
+    end
+
+    def test_xgroup_with_create_subcommand
+      r.xadd('s1', { f: 'v' })
+      assert_equal 'OK', r.xgroup(:create, 's1', 'g1', '$')
+    end
+
+    def test_xgroup_with_create_subcommand_and_mkstream_option
+      err_msg = 'ERR The XGROUP subcommand requires the key to exist. '\
+        'Note that for CREATE you may want to use the MKSTREAM option to create an empty stream automatically.'
+      assert_raises(Valkey::CommandError, err_msg) { r.xgroup(:create, 's2', 'g1', '$') }
+      assert_equal 'OK', r.xgroup(:create, 's2', 'g1', '$', mkstream: true)
+    end
+
+    def test_xgroup_with_create_subcommand_and_existed_stream_key
+      r.xadd('s1', { f: 'v' })
+      r.xgroup(:create, 's1', 'g1', '$')
+      assert_raises(Valkey::CommandError, 'BUSYGROUP Consumer Group name already exists') do
+        r.xgroup(:create, 's1', 'g1', '$')
+      end
+    end
+
+    def test_xgroup_with_setid_subcommand
+      r.xadd('s1', { f: 'v' })
+      r.xgroup(:create, 's1', 'g1', '$')
+      assert_equal 'OK', r.xgroup(:setid, 's1', 'g1', '0')
+    end
+
+    def test_xgroup_with_destroy_subcommand
+      r.xadd('s1', { f: 'v' })
+      r.xgroup(:create, 's1', 'g1', '$')
+      assert_equal 1, r.xgroup(:destroy, 's1', 'g1')
+    end
+
+    def test_xgroup_with_delconsumer_subcommand
+      r.xadd('s1', { f: 'v' })
+      r.xgroup(:create, 's1', 'g1', '$')
+      assert_equal 0, r.xgroup(:delconsumer, 's1', 'g1', 'c1')
+    end
+
+    def test_xgroup_with_invalid_arguments
+      assert_raises(Valkey::CommandError) { r.xgroup(nil, nil, nil) }
+      assert_raises(Valkey::CommandError) { r.xgroup('', '', '') }
+    end
+
+    def test_xreadgroup_with_a_key
+      r.xadd('s1', { f: 'v1' }, id: '0-1')
+      r.xgroup(:create, 's1', 'g1', '$')
+      r.xadd('s1', { f: 'v2' }, id: '0-2')
+      r.xadd('s1', { f: 'v3' }, id: '0-3')
+
+      actual = r.xreadgroup('g1', 'c1', 's1', '>')
+
+      assert_equal 2, actual['s1'].size
+      assert_equal 'v2', actual['s1'][0].last['f']
+      assert_equal 'v3', actual['s1'][1].last['f']
+    end
+
+    def test_xreadgroup_with_multiple_keys
+      r.xadd('s1', { f: 'v01' }, id: '0-1')
+      r.xgroup(:create, 's1', 'g1', '$')
+      r.xadd('s2', { f: 'v11' }, id: '1-1')
+      r.xgroup(:create, 's2', 'g1', '$')
+      r.xadd('s1', { f: 'v02' }, id: '0-2')
+      r.xadd('s2', { f: 'v12' }, id: '1-2')
+
+      actual = r.xreadgroup('g1', 'c1', %w[s1 s2], %w[> >])
+
+      assert_equal 1, actual['s1'].size
+      assert_equal 1, actual['s2'].size
+      assert_equal 'v02', actual['s1'][0].last['f']
+      assert_equal 'v12', actual['s2'][0].last['f']
+    end
+
+    def test_xreadgroup_with_count_option
+      r.xadd('s1', { f: 'v1' }, id: '0-1')
+      r.xgroup(:create, 's1', 'g1', '$')
+      r.xadd('s1', { f: 'v2' }, id: '0-2')
+      r.xadd('s1', { f: 'v3' }, id: '0-3')
+
+      actual = r.xreadgroup('g1', 'c1', 's1', '>', count: 1)
+
+      assert_equal 1, actual['s1'].size
+    end
+
+    def test_xreadgroup_with_noack_option
+      r.xadd('s1', { f: 'v1' }, id: '0-1')
+      r.xgroup(:create, 's1', 'g1', '$')
+      r.xadd('s1', { f: 'v2' }, id: '0-2')
+      r.xadd('s1', { f: 'v3' }, id: '0-3')
+
+      actual = r.xreadgroup('g1', 'c1', 's1', '>', noack: true)
+
+      assert_equal 2, actual['s1'].size
+    end
+
+    def test_xreadgroup_with_block_option
+      r.xadd('s1', { f: 'v' })
+      r.xgroup(:create, 's1', 'g1', '$')
+
+      actual = r.xreadgroup('g1', 'c1', 's1', '>', block: LOW_TIMEOUT * 1000)
+
+      assert_equal({}, actual)
+    end
+
+    def test_xreadgroup_with_invalid_arguments
+      assert_raises(Valkey::CommandError) { r.xreadgroup(nil, nil, nil, nil) }
+      assert_raises(Valkey::CommandError) { r.xreadgroup('', '', '', '') }
+      assert_raises(Valkey::CommandError) { r.xreadgroup('', '', [], []) }
+      assert_raises(Valkey::CommandError) { r.xreadgroup('', '', [''], ['']) }
+      r.xadd('s1', { f: 'v1' }, id: '0-1')
+      r.xgroup(:create, 's1', 'g1', '$')
+      assert_raises(Valkey::CommandError) { r.xreadgroup('g1', 'c1', 's1', '>', count: 'a') }
+      assert_raises(Valkey::CommandError) { r.xreadgroup('g1', 'c1', 's1', %w[> >]) }
+    end
+
+    def test_xreadgroup_a_trimmed_entry
+      r.xgroup(:create, 'k1', 'g1', '0', mkstream: true)
+      entry_id = r.xadd('k1', { value: 'v1' })
+
+      assert_equal({ 'k1' => [[entry_id, { 'value' => 'v1' }]] }, r.xreadgroup('g1', 'c1', 'k1', '>'))
+      assert_equal({ 'k1' => [[entry_id, { 'value' => 'v1' }]] }, r.xreadgroup('g1', 'c1', 'k1', '0'))
+      r.xtrim('k1', 0)
+
+      assert_equal({ 'k1' => [[entry_id, nil]] }, r.xreadgroup('g1', 'c1', 'k1', '0'))
     end
   end
 end

@@ -118,61 +118,7 @@ class Valkey
 
     result = result[:response]
 
-    convert_response = lambda { |result|
-      # TODO: handle all types of responses
-      case result[:response_type]
-      when ResponseType::STRING
-        result[:string_value].read_string(result[:string_value_len])
-      when ResponseType::INT
-        result[:int_value]
-      when ResponseType::FLOAT
-        result[:float_value]
-      when ResponseType::BOOL
-        result[:bool_value]
-      when ResponseType::ARRAY
-        ptr = result[:array_value]
-        count = result[:array_value_len].to_i
-
-        Array.new(count) do |i|
-          item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
-          convert_response.call(item)
-        end
-      when ResponseType::MAP
-        return nil if result[:array_value].null?
-
-        ptr = result[:array_value]
-        count = result[:array_value_len].to_i
-        map = {}
-
-        Array.new(count) do |i|
-          item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
-
-          map_key = convert_response.call(Bindings::CommandResponse.new(item[:map_key]))
-          map_value = convert_response.call(Bindings::CommandResponse.new(item[:map_value]))
-
-          map[map_key] = map_value
-        end
-
-        # technically it has to return a Hash, but as of now we return just one pair
-        map.to_a.flatten(1) # Flatten to get pairs
-      when ResponseType::SETS
-        ptr = result[:sets_value]
-        count = result[:sets_value_len].to_i
-
-        Array.new(count) do |i|
-          item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
-          convert_response.call(item)
-        end
-      when ResponseType::NULL
-        nil
-      when ResponseType::OK
-        "OK"
-      else
-        raise "Unsupported response type: #{result[:response_type]}"
-      end
-    }
-
-    response = convert_response.call(result)
+    response = recursive_convert_response(result)
 
     if block_given?
       block.call(response)
@@ -181,8 +127,63 @@ class Valkey
     end
   end
 
-  def send_command(command_type, command_args = [], &block)
-    # Validate connection
+  def recursive_convert_response(result)
+    # TODO: handle all types of responses
+    case result[:response_type]
+    when ResponseType::STRING
+      result[:string_value].read_string(result[:string_value_len])
+    when ResponseType::INT
+      result[:int_value]
+    when ResponseType::FLOAT
+      result[:float_value]
+    when ResponseType::BOOL
+      result[:bool_value]
+    when ResponseType::ARRAY
+      ptr = result[:array_value]
+      count = result[:array_value_len].to_i
+
+      Array.new(count) do |i|
+        item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
+        recursive_convert_response(item)
+      end
+    when ResponseType::MAP
+      return nil if result[:array_value].null?
+
+      ptr = result[:array_value]
+      count = result[:array_value_len].to_i
+
+      Array.new(count) do |i|
+        item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
+
+        map_key = recursive_convert_response(Bindings::CommandResponse.new(item[:map_key]))
+        map_value = recursive_convert_response(Bindings::CommandResponse.new(item[:map_value]))
+
+        map_value = map_value.flatten(1) if detect_array_of_pairs(map_value)
+
+        [map_key, map_value]
+      end.to_h
+    when ResponseType::SETS
+      ptr = result[:sets_value]
+      count = result[:sets_value_len].to_i
+
+      Array.new(count) do |i|
+        item = Bindings::CommandResponse.new(ptr + i * Bindings::CommandResponse.size)
+        recursive_convert_response(item)
+      end
+    when ResponseType::NULL
+      nil
+    when ResponseType::OK
+      "OK"
+    else
+      raise "Unsupported response type: #{result[:response_type]}"
+    end
+  end
+
+  def detect_array_of_pairs(object)
+    object.is_a?(Array) && !object.empty? && object.all? { |item| item.is_a?(Array) && item.size == 2 }
+  end
+
+  def send_command(command_type, command_args = [], &block)        # Validate connection
     if @connection.nil?
       raise "Connection is nil"
     elsif @connection.null?

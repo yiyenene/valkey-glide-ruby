@@ -140,6 +140,8 @@ class Valkey
     HSET_NX = 614
     HSTRLEN = 615
     HVALS = 616
+    HEXPIRE = 619
+    HTTL = 624
 
     # HyperLogLog commands
     PFADD = 701

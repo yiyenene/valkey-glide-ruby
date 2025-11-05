@@ -271,6 +271,38 @@ class Valkey
           break if cursor == "0"
         end
       end
+
+      # Sets the time to live in seconds for one or more fields.
+      #
+      # @example
+      #   valkey.hset("hash", "f1", "v1")
+      #   valkey.hexpire("hash", 10, "f1", "f2") # => [1, -2]
+      #
+      # @param [String] key
+      # @param [Integer] ttl
+      # @param [Array<String>] fields
+      # @return [Array<Integer>] Feedback on if the fields have been updated.
+      #
+      # See https://valkey.io/commands/hexpire/#return-information for array reply.
+      def hexpire(key, ttl, *fields)
+        send_command(RequestType::HEXPIRE, [key, ttl, "FIELDS", fields.length, *fields])
+      end
+
+      # Returns the time to live in seconds for one or more fields.
+      #
+      # @example
+      #   valkey.hset("hash", "f1", "v1", "f2", "v2")
+      #   valkey.hexpire("hash", 10, "f1") # => [1]
+      #   valkey.httl("hash", "f1", "f2", "f3") # => [10, -1, -2]
+      #
+      # @param [String] key
+      # @param [Array<String>] fields
+      # @return [Array<Integer>] Feedback on the TTL of the fields.
+      #
+      # See https://valkey.io/commands/httl/#return-information for array reply.
+      def httl(key, *fields)
+        send_command(RequestType::HTTL, [key, "FIELDS", fields.length, *fields])
+      end
     end
   end
 end

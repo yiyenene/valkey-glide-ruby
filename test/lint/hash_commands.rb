@@ -98,28 +98,26 @@ module Lint
     end
 
     def test_hrandfield
-      target_version("6.2") do
-        assert_nil r.hrandfield("foo")
-        assert_equal [], r.hrandfield("foo", 1)
+      assert_nil r.hrandfield("foo")
+      assert_equal [], r.hrandfield("foo", 1)
 
-        error = assert_raises(ArgumentError) do
-          r.hrandfield("foo", with_values: true)
-        end
-        assert_equal "count argument must be specified", error.message
+      error = assert_raises(ArgumentError) do
+        r.hrandfield("foo", with_values: true)
+      end
+      assert_equal "count argument must be specified", error.message
 
-        r.hset("foo", "f1", "s1")
-        r.hset("foo", "f2", "s2")
+      r.hset("foo", "f1", "s1")
+      r.hset("foo", "f2", "s2")
 
-        assert ["f1", "f2"].include?(r.hrandfield("foo"))
-        assert_equal ["f1", "f2"], r.hrandfield("foo", 2).sort
-        assert_equal 4, r.hrandfield("foo", -4).size
+      assert ["f1", "f2"].include?(r.hrandfield("foo"))
+      assert_equal ["f1", "f2"], r.hrandfield("foo", 2).sort
+      assert_equal 4, r.hrandfield("foo", -4).size
 
-        fields_with_values = r.hrandfield("foo", 2, with_values: true)
-        pp fields_with_values
-        fields_with_values.each do |(field, value)|
-          assert ["f1", "f2"].include?(field)
-          assert ["s1", "s2"].include?(value)
-        end
+      fields_with_values = r.hrandfield("foo", 2, with_values: true)
+      pp fields_with_values
+      fields_with_values.each do |(field, value)|
+        assert ["f1", "f2"].include?(field)
+        assert ["s1", "s2"].include?(value)
       end
     end
 
@@ -222,6 +220,28 @@ module Lint
       r.hmset("foo", "f1", "Jack", "f2", "33")
       expected = ["0", [%w[f1 Jack], %w[f2 33]]]
       assert_equal expected, r.hscan("foo", 0)
+    end
+
+    def test_hexpire
+      target_version("9.0.0") do
+        r.hset("foo", "f1", "v2")
+
+        assert_equal [1], r.hexpire("foo", 4, "f1")
+        assert_in_range(1..4, r.httl("foo", "f1")[0])
+      end
+    end
+
+    def test_httl
+      target_version("9.0.0") do
+        assert_equal [-2], r.httl("foo", "f1")
+
+        r.hset("foo", "f1", "v2")
+
+        assert_equal [-1], r.httl("foo", "f1")
+
+        r.hexpire("foo", 4, "f1")
+        assert_in_range(1..4, r.httl("foo", "f1")[0])
+      end
     end
   end
 end

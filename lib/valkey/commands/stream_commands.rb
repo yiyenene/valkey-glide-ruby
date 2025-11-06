@@ -262,15 +262,7 @@ class Valkey
           end
         args = [key, group, id_or_consumer, (mkstream ? 'MKSTREAM' : nil)].compact
 
-        send_command(request, args) do |response|
-          next response unless [RequestType::X_GROUP_CREATE_CONSUMER, RequestType::X_GROUP_DESTROY].include?(request)
-          # Even though the document says it returns an Integer, I don't know why GLIDE returns a boolean
-          # as a result of XGROUP CREATE_CONSUMER and XGROUP DESTROY.
-          next 1 if response == true
-          next 0 if response == false
-
-          response
-        end
+        send_command(request, args)
       end
 
       # Fetches a subset of the entries from one or multiple streams related with the consumer group.
@@ -401,7 +393,8 @@ class Valkey
       def xautoclaim(key, group, consumer, min_idle_time, start, count: nil, justid: false)
         args = [key, group, consumer, min_idle_time, start]
         if count
-          args << 'COUNT' << count.to_s
+          args << 'COUNT'
+          args << count.to_s
         end
         args << 'JUSTID' if justid
         blk = justid ? Utils::HashifyStreamAutoclaimJustId : Utils::HashifyStreamAutoclaim

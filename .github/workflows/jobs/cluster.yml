@@ -1,53 +1,10 @@
-name: CI
+name: Cluster Tests
 
 on:
-  push:
-    branches:
-      - main
-
-  pull_request:
+  workflow_call:
 
 jobs:
-  standalone:
-    runs-on: ubuntu-latest
-    name: Standalone / Ruby ${{ matrix.ruby }} Valkey ${{ matrix.valkey }}
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby:
-          - 3.4
-          - 3.3
-          - 3.2
-          - 3.1
-          - jruby
-        valkey:
-          - 7.2.10
-          - 8
-          - 8.1
-          - 9
-
-    services:
-      valkey:
-        image: valkey/valkey:${{ matrix.valkey }}
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="valkey-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
-      - name: Run standalone tests
-        run: bundle exec rake test:valkey
-
-  cluster:
+  test:
     runs-on: ubuntu-latest
     name: Cluster / Ruby ${{ matrix.ruby }}
     timeout-minutes: 20
@@ -143,3 +100,4 @@ jobs:
         run: |
           echo "=== Stopping Valkey cluster ==="
           docker compose -f .github/docker-compose.cluster.yml down -v
+

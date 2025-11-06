@@ -106,7 +106,8 @@ class Valkey
       when nil
         {}
       else
-        reply.map { |key, entries| [key, HashifyStreamEntries.call(entries)] }.to_h
+        # Since this works for both Hash and Array of pairs, we need to disable the Style/HashTransformValues cop
+        reply.map { |key, entries| [key, HashifyStreamEntries.call(entries)] }.to_h # rubocop:disable Style/HashTransformValues
       end
     }
 

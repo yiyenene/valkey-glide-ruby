@@ -130,7 +130,7 @@ class Valkey
       :pointer,     # route_bytes
       :ulong,       # route_bytes_len
       :ulong        # span_ptr (u64)
-    ], :pointer, blocking: true     # returns *mut CommandResult
+    ], :pointer, blocking: true # returns *mut CommandResult
     # Note: :blocking => true is required for proper multi-threading support
     # and blocking commands (BLPOP, XREAD, etc.). This releases the GIL
     # during FFI calls, allowing other Ruby threads to execute.

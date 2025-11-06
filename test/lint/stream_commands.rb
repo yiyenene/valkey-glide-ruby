@@ -123,21 +123,19 @@ module Lint
     end
 
     def test_xtrim_with_limit_option
-      begin
-        original = r.config(:get, 'stream-node-max-entries')['stream-node-max-entries']
-        r.config(:set, 'stream-node-max-entries', 1)
+      original = r.config(:get, 'stream-node-max-entries')['stream-node-max-entries']
+      r.config(:set, 'stream-node-max-entries', 1)
 
-        r.xadd('s1', { f: 'v1' })
-        r.xadd('s1', { f: 'v2' })
-        r.xadd('s1', { f: 'v3' })
-        r.xadd('s1', { f: 'v4' })
+      r.xadd('s1', { f: 'v1' })
+      r.xadd('s1', { f: 'v2' })
+      r.xadd('s1', { f: 'v3' })
+      r.xadd('s1', { f: 'v4' })
 
-        assert_equal 1, r.xtrim('s1', 0, approximate: true, limit: 1)
-        error = assert_raises(Valkey::CommandError) { r.xtrim('s1', 0, limit: 1) }
-        assert_includes error.message, "syntax error, LIMIT cannot be used without the special ~ option"
-      ensure
-        r.config(:set, 'stream-node-max-entries', original)
-      end
+      assert_equal 1, r.xtrim('s1', 0, approximate: true, limit: 1)
+      error = assert_raises(Valkey::CommandError) { r.xtrim('s1', 0, limit: 1) }
+      assert_includes error.message, "syntax error, LIMIT cannot be used without the special ~ option"
+    ensure
+      r.config(:set, 'stream-node-max-entries', original)
     end
 
     def test_xtrim_with_maxlen_strategy
@@ -188,7 +186,7 @@ module Lint
 
     def test_xdel_with_arrayed_entry_ids
       r.xadd('s1', { f: '1' }, id: '0-1')
-      assert_equal 1, r.xdel('s1', ['0-1', '0-2'])
+      assert_equal 1, r.xdel('s1', %w[0-1 0-2])
     end
 
     def test_xdel_with_invalid_entry_ids
@@ -210,7 +208,7 @@ module Lint
 
       actual = r.xrange('s1')
 
-      assert_equal(%w(v1 v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal(%w[v1 v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xrange_with_start_option
@@ -220,7 +218,7 @@ module Lint
 
       actual = r.xrange('s1', '0-2')
 
-      assert_equal %w(0-2 0-3), actual.map(&:first)
+      assert_equal %w[0-2 0-3], actual.map(&:first)
     end
 
     def test_xrange_with_end_option
@@ -229,7 +227,7 @@ module Lint
       r.xadd('s1', { f: 'v' }, id: '0-3')
 
       actual = r.xrange('s1', '-', '0-2')
-      assert_equal %w(0-1 0-2), actual.map(&:first)
+      assert_equal %w[0-1 0-2], actual.map(&:first)
     end
 
     def test_xrange_with_start_and_end_options
@@ -239,7 +237,7 @@ module Lint
 
       actual = r.xrange('s1', '0-2', '0-2')
 
-      assert_equal %w(0-2), actual.map(&:first)
+      assert_equal %w[0-2], actual.map(&:first)
     end
 
     def test_xrange_with_incomplete_entry_id_options
@@ -250,7 +248,7 @@ module Lint
       actual = r.xrange('s1', '0', '1')
 
       assert_equal 2, actual.size
-      assert_equal %w(0-1 1-1), actual.map(&:first)
+      assert_equal %w[0-1 1-1], actual.map(&:first)
     end
 
     def test_xrange_with_count_option
@@ -260,7 +258,7 @@ module Lint
 
       actual = r.xrange('s1', count: 2)
 
-      assert_equal %w(0-1 0-2), actual.map(&:first)
+      assert_equal %w[0-1 0-2], actual.map(&:first)
     end
 
     def test_xrange_with_not_existed_stream_key
@@ -283,8 +281,8 @@ module Lint
 
       actual = r.xrevrange('s1')
 
-      assert_equal %w(0-3 0-2 0-1), actual.map(&:first)
-      assert_equal(%w(v3 v2 v1), actual.map { |i| i.last['f'] })
+      assert_equal %w[0-3 0-2 0-1], actual.map(&:first)
+      assert_equal(%w[v3 v2 v1], actual.map { |i| i.last['f'] })
     end
 
     def test_xrevrange_with_start_option
@@ -294,7 +292,7 @@ module Lint
 
       actual = r.xrevrange('s1', '+', '0-2')
 
-      assert_equal %w(0-3 0-2), actual.map(&:first)
+      assert_equal %w[0-3 0-2], actual.map(&:first)
     end
 
     def test_xrevrange_with_end_option
@@ -304,7 +302,7 @@ module Lint
 
       actual = r.xrevrange('s1', '0-2')
 
-      assert_equal %w(0-2 0-1), actual.map(&:first)
+      assert_equal %w[0-2 0-1], actual.map(&:first)
     end
 
     def test_xrevrange_with_start_and_end_options
@@ -314,7 +312,7 @@ module Lint
 
       actual = r.xrevrange('s1', '0-2', '0-2')
 
-      assert_equal %w(0-2), actual.map(&:first)
+      assert_equal %w[0-2], actual.map(&:first)
     end
 
     def test_xrevrange_with_incomplete_entry_id_options
@@ -373,7 +371,7 @@ module Lint
 
       actual = r.xread('s1', 0)
 
-      assert_equal(%w(v1 v2), actual.fetch('s1').map { |i| i.last['f'] })
+      assert_equal(%w[v1 v2], actual.fetch('s1').map { |i| i.last['f'] })
     end
 
     def test_xread_with_multiple_keys
@@ -459,7 +457,7 @@ module Lint
     def test_xgroup_with_destroy_subcommand
       r.xadd('s1', { f: 'v' })
       r.xgroup(:create, 's1', 'g1', '$')
-      assert_equal 1, r.xgroup(:destroy, 's1', 'g1')
+      assert_equal true, r.xgroup(:destroy, 's1', 'g1')
     end
 
     def test_xgroup_with_delconsumer_subcommand
@@ -603,8 +601,8 @@ module Lint
 
       actual = r.xclaim('s1', 'g1', 'c2', 10, '0-2', '0-3')
 
-      assert_equal %w(0-2 0-3), actual.map(&:first)
-      assert_equal(%w(v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal %w[0-2 0-3], actual.map(&:first)
+      assert_equal(%w[v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xclaim_with_arrayed_entry_ids
@@ -617,8 +615,8 @@ module Lint
 
       actual = r.xclaim('s1', 'g1', 'c2', 10, %w[0-2 0-3])
 
-      assert_equal %w(0-2 0-3), actual.map(&:first)
-      assert_equal(%w(v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal %w[0-2 0-3], actual.map(&:first)
+      assert_equal(%w[v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xclaim_with_idle_option
@@ -631,8 +629,8 @@ module Lint
 
       actual = r.xclaim('s1', 'g1', 'c2', 10, '0-2', '0-3', idle: 0)
 
-      assert_equal %w(0-2 0-3), actual.map(&:first)
-      assert_equal(%w(v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal %w[0-2 0-3], actual.map(&:first)
+      assert_equal(%w[v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xclaim_with_time_option
@@ -646,8 +644,8 @@ module Lint
 
       actual = r.xclaim('s1', 'g1', 'c2', 10, '0-2', '0-3', time: time)
 
-      assert_equal %w(0-2 0-3), actual.map(&:first)
-      assert_equal(%w(v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal %w[0-2 0-3], actual.map(&:first)
+      assert_equal(%w[v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xclaim_with_retrycount_option
@@ -660,8 +658,8 @@ module Lint
 
       actual = r.xclaim('s1', 'g1', 'c2', 10, '0-2', '0-3', retrycount: 10)
 
-      assert_equal %w(0-2 0-3), actual.map(&:first)
-      assert_equal(%w(v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal %w[0-2 0-3], actual.map(&:first)
+      assert_equal(%w[v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xclaim_with_force_option
@@ -674,8 +672,8 @@ module Lint
 
       actual = r.xclaim('s1', 'g1', 'c2', 10, '0-2', '0-3', force: true)
 
-      assert_equal(%w(0-2 0-3), actual.map(&:first))
-      assert_equal(%w(v2 v3), actual.map { |i| i.last['f'] })
+      assert_equal(%w[0-2 0-3], actual.map(&:first))
+      assert_equal(%w[v2 v3], actual.map { |i| i.last['f'] })
     end
 
     def test_xclaim_with_justid_option
@@ -709,8 +707,8 @@ module Lint
       actual = r.xautoclaim('s1', 'g1', 'c2', 10, '0-0')
 
       assert_equal '0-0', actual['next']
-      assert_equal %w(0-2 0-3), actual['entries'].map(&:first)
-      assert_equal(%w(v2 v3), actual['entries'].map { |i| i.last['f'] })
+      assert_equal %w[0-2 0-3], actual['entries'].map(&:first)
+      assert_equal(%w[v2 v3], actual['entries'].map { |i| i.last['f'] })
     end
 
     def test_xautoclaim_with_justid_option
@@ -724,7 +722,7 @@ module Lint
       actual = r.xautoclaim('s1', 'g1', 'c2', 10, '0-0', justid: true)
 
       assert_equal '0-0', actual['next']
-      assert_equal %w(0-2 0-3), actual['entries']
+      assert_equal %w[0-2 0-3], actual['entries']
     end
 
     def test_xautoclaim_with_count_option
@@ -738,8 +736,8 @@ module Lint
       actual = r.xautoclaim('s1', 'g1', 'c2', 10, '0-0', count: 1)
 
       assert_equal '0-3', actual['next']
-      assert_equal %w(0-2), actual['entries'].map(&:first)
-      assert_equal(%w(v2), actual['entries'].map { |i| i.last['f'] })
+      assert_equal %w[0-2], actual['entries'].map(&:first)
+      assert_equal(%w[v2], actual['entries'].map { |i| i.last['f'] })
     end
 
     def test_xautoclaim_with_larger_interval

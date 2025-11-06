@@ -100,15 +100,18 @@ module Lint
       # Should have at least one shard
       assert result.length >= 1, "Should have at least one shard"
 
-      # Check structure of first shard - Redis 7.0+ returns Array format
+      # Check structure of first shard - valkey-glide returns Hash format
       first_shard = result.first
-      assert_instance_of Array, first_shard
-      # The structure is an array like ["slots", [0, 5460], "nodes", [...]]
-      # Should have at least 4 elements (slots key, slots value, nodes key, nodes value)
-      assert first_shard.length >= 4, "Shard should have at least 4 elements"
-      # Check that it contains the expected keys
-      assert first_shard.include?("slots"), "Shard should contain 'slots'"
-      assert first_shard.include?("nodes"), "Shard should contain 'nodes'"
+      assert_instance_of Hash, first_shard
+      # Should have the expected keys
+      assert first_shard.key?("slots"), "Shard should contain 'slots' key"
+      assert first_shard.key?("nodes"), "Shard should contain 'nodes' key"
+      # Verify slots is an array
+      assert_instance_of Array, first_shard["slots"]
+      assert first_shard["slots"].length == 2, "Slots should have start and end"
+      # Verify nodes is an array
+      assert_instance_of Array, first_shard["nodes"]
+      assert first_shard["nodes"].length >= 1, "Should have at least one node"
     rescue Valkey::CommandError => e
       # Skip if command not available in this Redis version
       skip("CLUSTER SHARDS not available in this Redis version") if e.message.include?("Unknown subcommand")
@@ -196,7 +199,7 @@ module Lint
       # Test cluster bumpepoch command - bump cluster epoch
       result = r.cluster_bumpepoch
       # This might succeed or fail depending on cluster state
-      # Accept OK, false, BUMPED X, or CommandError as valid responses
+      # Accept OK, false, BUMPED X, STILL X, or CommandError as valid responses
       case result
       when "OK"
         pass "Cluster bumpepoch succeeded as expected"
@@ -204,6 +207,8 @@ module Lint
         pass "Cluster bumpepoch returned false (cluster not ready for epoch bump)"
       when /^BUMPED \d+$/
         pass "Cluster bumpepoch succeeded and returned #{result}"
+      when /^STILL \d+$/
+        pass "Cluster bumpepoch returned #{result} (epoch unchanged)"
       when Valkey::CommandError
         pass "Cluster bumpepoch correctly failed as expected"
       else

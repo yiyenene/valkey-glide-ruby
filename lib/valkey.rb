@@ -181,7 +181,8 @@ class Valkey
     object.is_a?(Array) && !object.empty? && object.all? { |item| item.is_a?(Array) && item.size == 2 }
   end
 
-  def send_command(command_type, command_args = [], &block)        # Validate connection
+  def send_command(command_type, command_args = [], &block)
+    # Validate connection
     if @connection.nil?
       raise "Connection is nil"
     elsif @connection.null?

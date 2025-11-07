@@ -73,6 +73,23 @@ docker compose logs cluster-init
 docker compose exec app bundle exec rake test:cluster
 ```
 
+#### Testing with Different Valkey Versions
+
+You can test with different Valkey versions by setting the `VALKEY_VERSION` environment variable:
+
+```bash
+# Test with Valkey 7
+VALKEY_VERSION=7 docker compose --profile cluster up -d
+
+# Test with Valkey 8
+VALKEY_VERSION=8 docker compose --profile cluster up -d
+
+# Test with Valkey 9 (default)
+VALKEY_VERSION=9 docker compose --profile cluster up -d
+# or simply
+docker compose --profile cluster up -d
+```
+
 ### Stopping Services
 
 ```bash

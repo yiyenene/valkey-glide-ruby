@@ -1,6 +1,6 @@
 services:
   valkey-cluster-1:
-    image: valkey/valkey:9
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     container_name: valkey-cluster-1
     ports:
       - "7000:7000"
@@ -20,7 +20,7 @@ services:
       retries: 5
 
   valkey-cluster-2:
-    image: valkey/valkey:9
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     container_name: valkey-cluster-2
     ports:
       - "7001:7001"
@@ -40,7 +40,7 @@ services:
       retries: 5
 
   valkey-cluster-3:
-    image: valkey/valkey:9
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     container_name: valkey-cluster-3
     ports:
       - "7002:7002"
@@ -60,7 +60,7 @@ services:
       retries: 5
 
   valkey-cluster-4:
-    image: valkey/valkey:9
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     container_name: valkey-cluster-4
     ports:
       - "7003:7003"
@@ -80,7 +80,7 @@ services:
       retries: 5
 
   valkey-cluster-5:
-    image: valkey/valkey:9
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     container_name: valkey-cluster-5
     ports:
       - "7004:7004"
@@ -100,7 +100,7 @@ services:
       retries: 5
 
   valkey-cluster-6:
-    image: valkey/valkey:9
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     container_name: valkey-cluster-6
     ports:
       - "7005:7005"

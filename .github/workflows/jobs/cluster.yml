@@ -107,4 +107,3 @@ jobs:
         run: |
           echo "=== Stopping Valkey cluster ==="
           docker compose -f .github/docker-compose.cluster.yml down -v
-

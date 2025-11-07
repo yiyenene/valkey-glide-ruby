@@ -108,7 +108,8 @@ module Lint
       assert first_shard.key?("nodes"), "Shard should contain 'nodes' key"
       # Verify slots is an array
       assert_instance_of Array, first_shard["slots"]
-      assert first_shard["slots"].length == 2, "Slots should have start and end"
+      assert first_shard["slots"].length == 2,
+        "Slots should have start and end. Got: #{first_shard["slots"].inspect} (length: #{first_shard["slots"].length})"
       # Verify nodes is an array
       assert_instance_of Array, first_shard["nodes"]
       assert first_shard["nodes"].length >= 1, "Should have at least one node"

@@ -388,7 +388,8 @@ module Lint
       # Expected to fail if node has no slaves or cluster support disabled
       assert e.message.include?("cluster support disabled") ||
              e.message.include?("Unknown node") ||
-             e.message.include?("ERR")
+             e.message.include?("ERR"),
+             "Unexpected error in cluster_slaves: #{e.class}: #{e.message}"
     end
 
     def test_cluster_reset_on_cluster

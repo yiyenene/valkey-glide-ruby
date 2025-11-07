@@ -140,9 +140,11 @@ class Valkey
       #   - when `count` is specified and `:with_values` is not specified, an array of field names
       #   - when `:with_values` is specified, an array with `[field, value]` pairs
       def hrandfield(key, count = nil, withvalues: false, with_values: withvalues)
+        # rubocop:disable Style/IfUnlessModifier
         if with_values && count.nil?
           raise ArgumentError, "count argument must be specified"
         end
+        # rubocop:enable Style/IfUnlessModifier
 
         args = [key]
         args << count if count
@@ -306,4 +308,3 @@ class Valkey
     end
   end
 end
-

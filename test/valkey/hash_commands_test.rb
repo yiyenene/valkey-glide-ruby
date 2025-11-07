@@ -6,4 +6,3 @@ class TestHashCommands < Minitest::Test
   include Helper::Client
   include Lint::HashCommands
 end
-

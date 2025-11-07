@@ -62,7 +62,7 @@ module Lint
       assert_equal "s1", r.hget("foo", "f1")
       assert_equal "s2", r.hget("foo", "f2")
 
-      assert_equal 2, r.hdel("foo", ["f1", "f2"])
+      assert_equal 2, r.hdel("foo", %w[f1 f2])
 
       assert_nil r.hget("foo", "f1")
       assert_nil r.hget("foo", "f2")
@@ -94,7 +94,7 @@ module Lint
       r.hset("foo", "f1", "s1")
       r.hset("foo", "f2", "s2")
 
-      assert_equal ["f1", "f2"], r.hkeys("foo")
+      assert_equal %w[f1 f2], r.hkeys("foo")
     end
 
     def test_hrandfield
@@ -109,15 +109,15 @@ module Lint
       r.hset("foo", "f1", "s1")
       r.hset("foo", "f2", "s2")
 
-      assert ["f1", "f2"].include?(r.hrandfield("foo"))
-      assert_equal ["f1", "f2"], r.hrandfield("foo", 2).sort
+      assert %w[f1 f2].include?(r.hrandfield("foo"))
+      assert_equal %w[f1 f2], r.hrandfield("foo", 2).sort
       assert_equal 4, r.hrandfield("foo", -4).size
 
       fields_with_values = r.hrandfield("foo", 2, with_values: true)
       pp fields_with_values
       fields_with_values.each do |(field, value)|
-        assert ["f1", "f2"].include?(field)
-        assert ["s1", "s2"].include?(value)
+        assert %w[f1 f2].include?(field)
+        assert %w[s1 s2].include?(value)
       end
     end
 
@@ -127,7 +127,7 @@ module Lint
       r.hset("foo", "f1", "s1")
       r.hset("foo", "f2", "s2")
 
-      assert_equal ["s1", "s2"], r.hvals("foo")
+      assert_equal %w[s1 s2], r.hvals("foo")
     end
 
     def test_hgetall
@@ -158,7 +158,7 @@ module Lint
       r.hset("foo", "f2", "s2")
       r.hset("foo", "f3", "s3")
 
-      assert_equal ["s2", "s3"], r.hmget("foo", "f2", "f3")
+      assert_equal %w[s2 s3], r.hmget("foo", "f2", "f3")
     end
 
     def test_hmget_mapped
@@ -245,4 +245,3 @@ module Lint
     end
   end
 end
-

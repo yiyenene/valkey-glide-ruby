@@ -49,16 +49,17 @@ jobs:
 
   cluster:
     runs-on: ubuntu-latest
-    name: Cluster / Ruby ${{ matrix.ruby }}
+    name: Cluster / Ruby ${{ matrix.ruby }} Valkey ${{ matrix.valkey }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         ruby:
           - 3.4
-          # - 3.3
-          # - 3.2
-          # - 3.1
+        valkey:
+          - 7
+          - 8
+          - 9
 
     steps:
       - uses: actions/checkout@v4
@@ -69,13 +70,17 @@ jobs:
           bundler-cache: true
 
       - name: Start Valkey cluster nodes
+        env:
+          VALKEY_VERSION: ${{ matrix.valkey }}
         run: |
-          echo "=== Starting Valkey cluster nodes ==="
+          echo "=== Starting Valkey cluster nodes (version ${{ matrix.valkey }}) ==="
           docker compose -f .github/docker-compose.cluster.yml up -d
           echo "=== Waiting for all nodes to be healthy ==="
           sleep 10
 
       - name: Initialize Valkey cluster
+        env:
+          VALKEY_VERSION: ${{ matrix.valkey }}
         run: |
           echo "=== Creating Valkey cluster ==="
           docker exec valkey-cluster-1 valkey-cli --cluster create \
@@ -140,6 +145,8 @@ jobs:
 
       - name: Cleanup cluster
         if: always()
+        env:
+          VALKEY_VERSION: ${{ matrix.valkey }}
         run: |
           echo "=== Stopping Valkey cluster ==="
           docker compose -f .github/docker-compose.cluster.yml down -v

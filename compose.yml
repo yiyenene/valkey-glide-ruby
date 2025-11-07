@@ -20,7 +20,7 @@ services:
 
   # Valkey standalone server (default)
   valkey:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:9
     ports:
       - "6379:6379"
     command: valkey-server --protected-mode no
@@ -32,7 +32,7 @@ services:
 
   # Valkey cluster nodes (optional, use with --profile cluster)
   valkey-cluster-1:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     ports:
       - "7000:7000"
       - "17000:17000"
@@ -53,7 +53,7 @@ services:
       retries: 5
 
   valkey-cluster-2:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     ports:
       - "7001:7001"
       - "17001:17001"
@@ -74,7 +74,7 @@ services:
       retries: 5
 
   valkey-cluster-3:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     ports:
       - "7002:7002"
       - "17002:17002"
@@ -95,7 +95,7 @@ services:
       retries: 5
 
   valkey-cluster-4:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     ports:
       - "7003:7003"
       - "17003:17003"
@@ -116,7 +116,7 @@ services:
       retries: 5
 
   valkey-cluster-5:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     ports:
       - "7004:7004"
       - "17004:17004"
@@ -137,7 +137,7 @@ services:
       retries: 5
 
   valkey-cluster-6:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     ports:
       - "7005:7005"
       - "17005:17005"
@@ -159,7 +159,7 @@ services:
 
   # Initialize cluster (runs once)
   cluster-init:
-    image: valkey/valkey:7.2
+    image: valkey/valkey:${VALKEY_VERSION:-9}
     depends_on:
       valkey-cluster-1:
         condition: service_healthy

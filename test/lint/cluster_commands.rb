@@ -108,7 +108,8 @@ module Lint
       assert first_shard.key?("nodes"), "Shard should contain 'nodes' key"
       # Verify slots is an array
       assert_instance_of Array, first_shard["slots"]
-      assert first_shard["slots"].length == 2, "Slots should have start and end"
+      assert first_shard["slots"].length == 2,
+             "Slots should have start and end. Got: #{first_shard['slots'].inspect} (length: #{first_shard['slots'].length})" # rubocop:disable Layout/LineLength
       # Verify nodes is an array
       assert_instance_of Array, first_shard["nodes"]
       assert first_shard["nodes"].length >= 1, "Should have at least one node"
@@ -388,7 +389,8 @@ module Lint
       # Expected to fail if node has no slaves or cluster support disabled
       assert e.message.include?("cluster support disabled") ||
              e.message.include?("Unknown node") ||
-             e.message.include?("ERR")
+             e.message.include?("ERR"),
+             "Unexpected error in cluster_slaves: #{e.class}: #{e.message}"
     end
 
     def test_cluster_reset_on_cluster

@@ -11,12 +11,32 @@ services:
     environment:
       - BUNDLE_PATH=/usr/local/bundle
       - VALKEY_HOST=valkey
+      - CLUSTER_HOST=valkey-cluster
+      - RUST_BACKTRACE=1
     depends_on:
       - valkey
     stdin_open: true
     tty: true
     init: true
     command: sleep infinity
+
+  # FFI builder service (only starts when needed)
+  ffi-builder:
+    platform: linux/amd64
+    image: rust:slim-trixie
+    volumes:
+      - .:/app
+      - rust_cache:/usr/local/cargo/registry  # Rust cache
+    working_dir: /app/glide/ffi
+    environment:
+      - GLIDE_NAME=GlideRuby
+      - GLIDE_VERSION=${GLIDE_VERSION:-2.1.1}
+    command: >
+      bash -c "apt-get update && 
+               apt-get install -y git protobuf-compiler && 
+               cargo build --release"
+    profiles:
+      - build  # Controlled by profile
 
   # Valkey standalone server (default)
   valkey:
@@ -33,6 +53,7 @@ services:
   # Valkey cluster nodes (optional, use with --profile cluster)
   valkey-cluster-1:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    container_name: valkey-cluster-1
     ports:
       - "7000:7000"
       - "17000:17000"
@@ -54,6 +75,7 @@ services:
 
   valkey-cluster-2:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    container_name: valkey-cluster-2
     ports:
       - "7001:7001"
       - "17001:17001"
@@ -75,6 +97,7 @@ services:
 
   valkey-cluster-3:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    container_name: valkey-cluster-3
     ports:
       - "7002:7002"
       - "17002:17002"
@@ -96,6 +119,7 @@ services:
 
   valkey-cluster-4:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    container_name: valkey-cluster-4
     ports:
       - "7003:7003"
       - "17003:17003"
@@ -117,6 +141,7 @@ services:
 
   valkey-cluster-5:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    container_name: valkey-cluster-5
     ports:
       - "7004:7004"
       - "17004:17004"
@@ -138,6 +163,7 @@ services:
 
   valkey-cluster-6:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    container_name: valkey-cluster-6
     ports:
       - "7005:7005"
       - "17005:17005"
@@ -173,23 +199,17 @@ services:
         condition: service_healthy
       valkey-cluster-6:
         condition: service_healthy
-    command: >
-      sh -c "
-        echo 'Waiting for cluster nodes to be ready...' &&
-        sleep 5 &&
-        valkey-cli --cluster create
-        valkey-cluster-1:7000
-        valkey-cluster-2:7001
-        valkey-cluster-3:7002
-        valkey-cluster-4:7003
-        valkey-cluster-5:7004
-        valkey-cluster-6:7005
-        --cluster-replicas 1
-        --cluster-yes
-      "
+    command:
+      - sh
+      - -c
+      - |
+        echo 'Waiting for cluster nodes to be ready...'
+        sleep 5
+        valkey-cli --cluster create valkey-cluster-1:7000 valkey-cluster-2:7001 valkey-cluster-3:7002 valkey-cluster-4:7003 valkey-cluster-5:7004 valkey-cluster-6:7005 --cluster-replicas 1 --cluster-yes
     profiles:
       - cluster
 
 volumes:
   bundle_cache:
+  rust_cache:
 

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Build FFI library using Docker
+
+set -e
+
+echo "🔨 Building FFI library..."
+
+# Build FFI using Docker Compose
+docker compose --profile build run --rm ffi-builder
+
+# Copy build artifact
+src="glide/ffi/target/release/libglide_ffi.so"
+dst="lib/valkey/libglide_ffi.so"
+
+if [ -f "$src" ]; then
+  cp "$src" "$dst"
+  echo "✅ FFI library built successfully!"
+  echo ""
+  echo "📦 Build artifact:"
+  ls -lh "$dst"
+else
+  echo "❌ Build failed: $src not found"
+  exit 1
+fi
+

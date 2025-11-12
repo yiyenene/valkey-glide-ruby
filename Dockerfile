@@ -1,30 +1,21 @@
 # syntax=docker/dockerfile:1
 
-# Stage 2: Ruby development environment
-FROM ruby:3.4
+FROM ruby:3.4-slim
 
-# Install system dependencies
+# Install minimal required packages
 RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    apt-get install -y build-essential git && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy Gemfile, Gemfile.lock, and gemspec
-COPY Gemfile* *.gemspec ./
+# Copy Gemfile and run bundle install
+COPY Gemfile Gemfile.lock valkey.gemspec ./
 COPY lib/valkey/version.rb ./lib/valkey/
 
-# Install bundler and gems
-RUN gem install bundler && \
-    bundle install
+RUN bundle install
 
-# Copy the rest of the application (including native libraries)
+# Copy application code (including committed libglide_ffi.so)
 COPY . .
 
-# Keep container running for development
 CMD ["sleep", "infinity"]
-

@@ -21,9 +21,16 @@ DB          = 15
 TIMEOUT = Float(ENV["TIMEOUT"] || 5.0) # Increased from 3.0 to 5.0 for CI stability
 LOW_TIMEOUT = Float(ENV["LOW_TIMEOUT"] || 0.01) # for blocking-command tests
 
-CLUSTER_NODES = 6.times.map do |i|
-  { host: HOST, port: 7000 + i }
-end
+# Cluster nodes: use CLUSTER_HOST if set (for Docker), otherwise use HOST
+CLUSTER_HOST = ENV.fetch('CLUSTER_HOST', HOST)
+CLUSTER_NODES =
+  if CLUSTER_HOST == HOST
+    # CI or local (host-based): connect to 127.0.0.1:7000-7005
+    6.times.map { |i| { host: HOST, port: 7000 + i } }
+  else
+    # Docker environment: connect to valkey-cluster-1:7000, etc.
+    6.times.map { |i| { host: "#{CLUSTER_HOST}-#{i + 1}", port: 7000 + i } }
+  end
 
 Dir[File.expand_path("lint/**/*.rb", __dir__)].sort.each do |f|
   require f

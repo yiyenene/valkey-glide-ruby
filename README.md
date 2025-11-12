@@ -117,6 +117,80 @@ docker compose build app
 docker compose up -d
 ```
 
+## Building the FFI
+
+This library uses [Valkey Glide Core][valkey-glide-home] (Rust) via FFI (Foreign Function Interface). The Rust library is managed as a Git submodule.
+
+### Initial Setup
+
+Clone the repository with submodules:
+
+```bash
+# If you already cloned without submodules
+git submodule update --init --recursive
+
+# Or clone with submodules from the start
+git clone --recursive https://github.com/valkey-io/valkey-glide-ruby.git
+```
+
+Create `.env` file from the template:
+
+```bash
+cp .env.example .env
+```
+
+This sets up the `GLIDE_VERSION` environment variable for FFI builds.
+
+### Building FFI Library
+
+The FFI library (`libglide_ffi.so`) is built using a Docker multi-stage build:
+
+```bash
+# Using the build script (recommended)
+./bin/build-ffi
+
+# Or manually with Docker Compose
+docker compose --profile build run --rm ffi-builder
+# Then copy the built library
+cp glide/ffi/target/release/libglide_ffi.so lib/valkey/
+```
+
+### Updating Valkey Glide Submodule
+
+To update the submodule to the latest release:
+
+```bash
+# Using the update script (automatically updates .env with version)
+./bin/update-glide
+
+# Then commit the changes
+git commit -m "Update glide submodule to latest release"
+```
+
+The script automatically updates the `.env` file with the new `GLIDE_VERSION`. 
+
+If you need to manually set a specific version, edit `.env`:
+
+```bash
+echo "GLIDE_VERSION=2.2.0" > .env
+```
+
+### Cleaning Build Artifacts
+
+```bash
+# Clean build artifacts
+bundle exec rake ffi:clean
+
+# Or manually remove
+rm -rf glide/ffi/target/
+```
+
+### Architecture
+
+- **Builder Stage**: Compiles Rust code in a Rust-enabled Docker image
+- **Runtime Stage**: Lightweight Ruby image with pre-built FFI library
+- **Caching**: Separate volumes for Rust and Ruby dependencies for faster builds
+
 Checkout [the implementation status of the Valkey commands][commands-implementation-progress].
 
 

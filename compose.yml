@@ -18,6 +18,24 @@ services:
     init: true
     command: sleep infinity
 
+  # FFI builder service (only starts when needed)
+  ffi-builder:
+    platform: linux/amd64
+    image: rust:slim-trixie
+    volumes:
+      - .:/app
+      - rust_cache:/usr/local/cargo/registry  # Rust cache
+    working_dir: /app/glide/ffi
+    environment:
+      - GLIDE_NAME=GlideRuby
+      - GLIDE_VERSION=${GLIDE_VERSION:-2.1.1}
+    command: >
+      bash -c "apt-get update && 
+               apt-get install -y git protobuf-compiler && 
+               cargo build --release"
+    profiles:
+      - build  # Controlled by profile
+
   # Valkey standalone server (default)
   valkey:
     image: valkey/valkey:9
@@ -192,4 +210,5 @@ services:
 
 volumes:
   bundle_cache:
+  rust_cache:
 

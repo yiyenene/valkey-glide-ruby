@@ -2,6 +2,7 @@
 
 require 'bundler/gem_tasks'
 require 'rake/testtask'
+require 'fileutils'
 
 namespace :test do
   groups = %i[valkey cluster]
@@ -16,6 +17,18 @@ namespace :test do
 
   lost_tests = Dir["test/**/*_test.rb"] - groups.map { |g| Dir["test/#{g}/**/*_test.rb"] }.flatten
   abort "The following test files are in no group:\n#{lost_tests.join("\n")}" unless lost_tests.empty?
+end
+
+namespace :ffi do
+  desc "Clean FFI build artifacts"
+  task :clean do
+    if Dir.exist?("glide/ffi/target")
+      FileUtils.rm_rf("glide/ffi/target")
+      puts "✅ Build artifacts cleaned"
+    else
+      puts "No build artifacts to clean"
+    end
+  end
 end
 
 task test: ["test:valkey"]

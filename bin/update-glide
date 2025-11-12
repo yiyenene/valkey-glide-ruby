@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Update glide submodule to latest release
+
+set -e
+
+echo "🔄 Updating valkey-glide submodule..."
+
+cd glide
+git fetch --tags
+
+LATEST_TAG=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+
+if [ -z "$LATEST_TAG" ]; then
+  echo "❌ No release tags found"
+  exit 1
+fi
+
+echo "📦 Latest release: $LATEST_TAG"
+git checkout $LATEST_TAG
+
+cd ..
+git add glide
+
+# Extract version number (remove 'v' prefix)
+VERSION=${LATEST_TAG#v}
+
+# Update or create .env file
+echo "📝 Updating .env with GLIDE_VERSION=$VERSION"
+
+if [ -f .env ]; then
+  # Update existing .env
+  if grep -q "^GLIDE_VERSION=" .env; then
+    # Replace existing GLIDE_VERSION
+    sed -i.bak "s/^GLIDE_VERSION=.*/GLIDE_VERSION=$VERSION/" .env
+    rm -f .env.bak
+  else
+    # Add GLIDE_VERSION
+    echo "GLIDE_VERSION=$VERSION" >> .env
+  fi
+else
+  # Create new .env from template or scratch
+  if [ -f .env.example ]; then
+    cp .env.example .env
+    sed -i.bak "s/^GLIDE_VERSION=.*/GLIDE_VERSION=$VERSION/" .env
+    rm -f .env.bak
+  else
+    echo "# Valkey Glide FFI version (auto-updated by bin/update-glide)" > .env
+    echo "GLIDE_VERSION=$VERSION" >> .env
+  fi
+fi
+
+echo "✅ Updated glide submodule to $LATEST_TAG"
+echo "✅ Updated .env with GLIDE_VERSION=$VERSION"
+echo ""
+echo "   Run 'git commit' to save the changes"
+echo "   Note: .env is git-ignored but you can check the version with 'cat .env'"

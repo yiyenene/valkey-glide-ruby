@@ -14,6 +14,9 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "✅ Cluster is ready"
+echo "📦 Installing dependencies..."
+docker compose exec app bundle install
+
 echo "🧪 Running cluster tests..."
 docker compose exec app bundle exec rake test:cluster
 

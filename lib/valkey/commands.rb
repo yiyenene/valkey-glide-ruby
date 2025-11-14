@@ -13,6 +13,7 @@ require "valkey/commands/set_commands"
 require "valkey/commands/scripting_commands"
 require "valkey/commands/cluster_commands"
 require "valkey/commands/stream_commands"
+require "valkey/commands/hash_commands"
 
 class Valkey
   # Valkey commands module
@@ -41,6 +42,7 @@ class Valkey
     include ScriptingCommands
     include ClusterCommands
     include StreamCommands
+    include HashCommands
 
     # there are a few commands that are not implemented by design
     #

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "🚀 Starting Valkey cluster and app..."
+docker compose --profile cluster up -d --wait
+
+cleanup() {
+  echo ""
+  echo "🧹 Cleaning up cluster..."
+  docker compose --profile cluster down
+  echo "✅ Cleanup complete"
+}
+
+trap cleanup EXIT INT TERM
+
+echo "✅ Cluster is ready"
+echo "🧪 Running cluster tests..."
+docker compose exec app bundle exec rake test:cluster
+
+echo "✅ Tests completed"
+

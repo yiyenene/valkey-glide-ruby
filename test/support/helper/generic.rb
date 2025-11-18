@@ -100,5 +100,72 @@ module Helper
       admin.acl("SETUSER", "default", "nopass")
       admin.close
     end
+
+    # Simple class to control retry behavior from within a block
+    class RetryDecision
+      attr_accessor :should_retry
+
+      def initialize
+        @should_retry = false
+      end
+
+      # Mark that the operation should be retried
+      def retry!
+        @should_retry = true
+      end
+    end
+
+    # Retry a block with flexible retry conditions
+    #
+    # @param max_retries [Integer] maximum number of retries
+    # @param sleep_time [Float] seconds to sleep between retries
+    # @param rescue_errors [Class, Array<Class>] exception class(es) to rescue and retry
+    # @yield [retry_decision] block to execute, receives RetryDecision object
+    # @return [Array] [result, retry_count]
+    #
+    # @example Retry on empty result
+    #   result, count = retry_with(max_retries: 3, sleep_time: 0.5) do |retry_decision|
+    #     res = some_operation
+    #     retry_decision.retry! if res.empty?
+    #     res
+    #   end
+    #
+    # @example Retry on timeout exception (single error)
+    #   result, count = retry_with(max_retries: 2, rescue_errors: Valkey::TimeoutError) do
+    #     some_operation_that_may_timeout
+    #   end
+    #
+    # @example Retry on multiple exceptions
+    #   result, count = retry_with(rescue_errors: [Valkey::TimeoutError, Valkey::ConnectionError]) do
+    #     some_operation
+    #   end
+    #
+    def retry_with(max_retries: 3, sleep_time: 0.5, rescue_errors: [])
+      # Allow single error class or array of error classes
+      rescue_errors = Array(rescue_errors)
+
+      retry_count = 0
+      result = nil
+
+      begin
+        loop do
+          decision = RetryDecision.new
+          result = yield(decision)
+
+          break if !decision.should_retry || retry_count >= max_retries
+
+          retry_count += 1
+          sleep sleep_time
+        end
+
+        [result, retry_count]
+      rescue *rescue_errors => e
+        raise e if retry_count >= max_retries
+
+        retry_count += 1
+        sleep sleep_time
+        retry
+      end
+    end
   end
 end

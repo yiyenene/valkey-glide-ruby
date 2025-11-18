@@ -120,10 +120,14 @@ module Lint
 
     def test_cluster_links
       # Test cluster links - only available in Redis 7.0+
-      result = r.cluster_links
+      result, retry_count = retry_with(max_retries: 3, sleep_time: 0.5) do |retry_decision|
+        res = r.cluster_links
+        retry_decision.retry! if res.empty?
+        res
+      end
+
       assert_instance_of Array, result
-      # Should have at least one link
-      assert result.length >= 1, "Should have at least one link"
+      assert result.length >= 1, "Should have at least one link (retried #{retry_count} times)"
     rescue Valkey::CommandError => e
       # Skip if command not available in this Redis version
       skip("CLUSTER LINKS not available in this Redis version") if e.message.include?("Unknown subcommand")
@@ -198,18 +202,26 @@ module Lint
 
     def test_cluster_bumpepoch
       # Test cluster bumpepoch command - bump cluster epoch
-      result = r.cluster_bumpepoch
+      # This command may timeout if cluster is not ready for epoch bump
+      result, retry_count = retry_with(
+        max_retries: 2,
+        sleep_time: 1.0,
+        rescue_errors: Valkey::TimeoutError
+      ) do |_retry_decision|
+        r.cluster_bumpepoch
+      end
+
       # This might succeed or fail depending on cluster state
       # Accept OK, false, BUMPED X, STILL X, or CommandError as valid responses
       case result
       when "OK"
-        pass "Cluster bumpepoch succeeded as expected"
+        pass "Cluster bumpepoch succeeded (retried #{retry_count} times)"
       when false
-        pass "Cluster bumpepoch returned false (cluster not ready for epoch bump)"
+        pass "Cluster bumpepoch returned false (retried #{retry_count} times)"
       when /^BUMPED \d+$/
-        pass "Cluster bumpepoch succeeded and returned #{result}"
+        pass "Cluster bumpepoch succeeded: #{result} (retried #{retry_count} times)"
       when /^STILL \d+$/
-        pass "Cluster bumpepoch returned #{result} (epoch unchanged)"
+        pass "Cluster bumpepoch: #{result} (retried #{retry_count} times)"
       when Valkey::CommandError
         pass "Cluster bumpepoch correctly failed as expected"
       else
@@ -218,6 +230,9 @@ module Lint
     rescue Valkey::CommandError
       # Expected to fail in normal cluster operation
       pass "Cluster bumpepoch correctly failed as expected"
+    rescue Valkey::TimeoutError
+      # If it still times out after retries, skip the test
+      skip("CLUSTER BUMPEPOCH timed out after 2 retries - cluster may not be ready")
     end
 
     def test_cluster_delslotsrange

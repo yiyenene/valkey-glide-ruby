@@ -11,7 +11,7 @@ class Valkey
       #
       # @return [String] `"OK"`
       def asking
-        send_command(RequestType::ASKING)
+        send_command(RequestType::CUSTOM_COMMAND, ["ASKING"])
       end
 
       # Add slots to the cluster.
@@ -19,7 +19,7 @@ class Valkey
       # @param [Array<Integer>] slots array of slot numbers
       # @return [String] `"OK"`
       def cluster_addslots(*slots)
-        send_command(RequestType::CLUSTER_ADD_SLOTS, slots)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "ADDSLOTS", *slots])
       end
 
       # Add a range of slots to the cluster.
@@ -28,14 +28,14 @@ class Valkey
       # @param [Integer] end_slot ending slot number
       # @return [String] `"OK"`
       def cluster_addslotsrange(start_slot, end_slot)
-        send_command(RequestType::CLUSTER_ADD_SLOTS_RANGE, [start_slot, end_slot])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "ADDSLOTSRANGE", start_slot, end_slot])
       end
 
       # Bump the epoch of the cluster.
       #
       # @return [String] `"OK"`
       def cluster_bumpepoch
-        send_command(RequestType::CLUSTER_BUMP_EPOCH)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "BUMPEPOCH"])
       end
 
       # Count failure reports for a node.
@@ -43,7 +43,7 @@ class Valkey
       # @param [String] node_id the node ID
       # @return [Integer] number of failure reports
       def cluster_count_failure_reports(node_id)
-        send_command(RequestType::CLUSTER_COUNT_FAILURE_REPORTS, [node_id])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "COUNT-FAILURE-REPORTS", node_id])
       end
 
       # Count keys in a specific slot.
@@ -51,7 +51,7 @@ class Valkey
       # @param [Integer] slot the slot number
       # @return [Integer] number of keys in the slot
       def cluster_countkeysinslot(slot)
-        send_command(RequestType::CLUSTER_COUNT_KEYS_IN_SLOT, [slot])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "COUNTKEYSINSLOT", slot])
       end
 
       # Delete slots from the cluster.
@@ -59,7 +59,7 @@ class Valkey
       # @param [Array<Integer>] slots array of slot numbers
       # @return [String] `"OK"`
       def cluster_delslots(*slots)
-        send_command(RequestType::CLUSTER_DEL_SLOTS, slots)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "DELSLOTS", *slots])
       end
 
       # Delete a range of slots from the cluster.
@@ -68,7 +68,7 @@ class Valkey
       # @param [Integer] end_slot ending slot number
       # @return [String] `"OK"`
       def cluster_delslotsrange(start_slot, end_slot)
-        send_command(RequestType::CLUSTER_DEL_SLOTS_RANGE, [start_slot, end_slot])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "DELSLOTSRANGE", start_slot, end_slot])
       end
 
       # Force a failover of the cluster.
@@ -76,16 +76,16 @@ class Valkey
       # @param [String] force force the failover
       # @return [String] `"OK"`
       def cluster_failover(force = nil)
-        args = []
+        args = ["CLUSTER", "FAILOVER"]
         args << "FORCE" if force
-        send_command(RequestType::CLUSTER_FAILOVER, args)
+        send_command(RequestType::CUSTOM_COMMAND, args)
       end
 
       # Flush all slots from the cluster.
       #
       # @return [String] `"OK"`
       def cluster_flushslots
-        send_command(RequestType::CLUSTER_FLUSH_SLOTS)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "FLUSHSLOTS"])
       end
 
       # Remove a node from the cluster.
@@ -93,7 +93,7 @@ class Valkey
       # @param [String] node_id the node ID to forget
       # @return [String] `"OK"`
       def cluster_forget(node_id)
-        send_command(RequestType::CLUSTER_FORGET, [node_id])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "FORGET", node_id])
       end
 
       # Get keys in a specific slot.
@@ -102,14 +102,14 @@ class Valkey
       # @param [Integer] count maximum number of keys to return
       # @return [Array<String>] array of keys
       def cluster_getkeysinslot(slot, count)
-        send_command(RequestType::CLUSTER_GET_KEYS_IN_SLOT, [slot, count])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "GETKEYSINSLOT", slot, count])
       end
 
       # Get information about the cluster.
       #
       # @return [Hash<String, String>] cluster information
       def cluster_info
-        send_command(RequestType::CLUSTER_INFO) do |reply|
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "INFO"]) do |reply|
           Utils::HashifyInfo.call(reply)
         end
       end
@@ -119,14 +119,14 @@ class Valkey
       # @param [String] key the key name
       # @return [Integer] slot number
       def cluster_keyslot(key)
-        send_command(RequestType::CLUSTER_KEY_SLOT, [key])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "KEYSLOT", key])
       end
 
       # Get information about cluster links.
       #
       # @return [Array<Hash>] array of link information
       def cluster_links
-        send_command(RequestType::CLUSTER_LINKS)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "LINKS"])
       end
 
       # Meet another node in the cluster.
@@ -135,28 +135,28 @@ class Valkey
       # @param [Integer] port port of the node
       # @return [String] `"OK"`
       def cluster_meet(ip, port)
-        send_command(RequestType::CLUSTER_MEET, [ip, port])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "MEET", ip, port])
       end
 
       # Get the ID of the current node.
       #
       # @return [String] node ID
       def cluster_myid
-        send_command(RequestType::CLUSTER_MY_ID)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "MYID"])
       end
 
       # Get the shard ID of the current node.
       #
       # @return [String] shard ID
       def cluster_myshardid
-        send_command(RequestType::CLUSTER_MY_SHARD_ID)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "MYSHARDID"])
       end
 
       # Get information about all nodes in the cluster.
       #
       # @return [Array<Hash>] array of node information
       def cluster_nodes
-        send_command(RequestType::CLUSTER_NODES) do |reply|
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "NODES"]) do |reply|
           Utils::HashifyClusterNodes.call(reply)
         end
       end
@@ -166,7 +166,7 @@ class Valkey
       # @param [String] node_id the master node ID
       # @return [Array<Hash>] array of replica information
       def cluster_replicas(node_id)
-        send_command(RequestType::CLUSTER_REPLICAS, [node_id]) do |reply|
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "REPLICAS", node_id]) do |reply|
           Utils::HashifyClusterSlaves.call(reply)
         end
       end
@@ -176,7 +176,7 @@ class Valkey
       # @param [String] node_id the master node ID
       # @return [String] `"OK"`
       def cluster_replicate(node_id)
-        send_command(RequestType::CLUSTER_REPLICATE, [node_id])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "REPLICATE", node_id])
       end
 
       # Reset the cluster.
@@ -184,16 +184,16 @@ class Valkey
       # @param [String] hard hard reset
       # @return [String] `"OK"`
       def cluster_reset(hard = nil)
-        args = []
+        args = ["CLUSTER", "RESET"]
         args << "HARD" if hard
-        send_command(RequestType::CLUSTER_RESET, args)
+        send_command(RequestType::CUSTOM_COMMAND, args)
       end
 
       # Save the cluster configuration.
       #
       # @return [String] `"OK"`
       def cluster_saveconfig
-        send_command(RequestType::CLUSTER_SAVE_CONFIG)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "SAVECONFIG"])
       end
 
       # Set the config epoch for a node.
@@ -201,7 +201,7 @@ class Valkey
       # @param [Integer] epoch the config epoch
       # @return [String] `"OK"`
       def cluster_set_config_epoch(epoch)
-        send_command(RequestType::CLUSTER_SET_CONFIG_EPOCH, [epoch])
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "SET-CONFIG-EPOCH", epoch])
       end
 
       # Set the state of a slot.
@@ -211,23 +211,23 @@ class Valkey
       # @param [String] node_id the node ID (optional)
       # @return [String] `"OK"`
       def cluster_setslot(slot, state, node_id = nil)
-        args = [slot, state]
+        args = ["CLUSTER", "SETSLOT", slot, state]
         args << node_id if node_id
-        send_command(RequestType::CLUSTER_SETSLOT, args)
+        send_command(RequestType::CUSTOM_COMMAND, args)
       end
 
       # Get information about cluster shards.
       #
       # @return [Array<Hash>] array of shard information
       def cluster_shards
-        send_command(RequestType::CLUSTER_SHARDS)
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "SHARDS"])
       end
 
       # Get information about slave nodes (deprecated, use cluster_replicas).
       #
       # @return [Array<Hash>] array of slave information
       def cluster_slaves(node_id)
-        send_command(RequestType::CLUSTER_SLAVES, [node_id]) do |reply|
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "SLAVES", node_id]) do |reply|
           Utils::HashifyClusterSlaves.call(reply)
         end
       end
@@ -236,7 +236,7 @@ class Valkey
       #
       # @return [Array<Hash>] array of slot information
       def cluster_slots
-        send_command(RequestType::CLUSTER_SLOTS) do |reply|
+        send_command(RequestType::CUSTOM_COMMAND, ["CLUSTER", "SLOTS"]) do |reply|
           Utils::HashifyClusterSlots.call(reply)
         end
       end
@@ -245,14 +245,14 @@ class Valkey
       #
       # @return [String] "OK"
       def readonly
-        send_command(RequestType::READ_ONLY)
+        send_command(RequestType::CUSTOM_COMMAND, ["READONLY"])
       end
 
       # Set the connection to read-write mode.
       #
       # @return [String] "OK"
       def readwrite
-        send_command(RequestType::READ_WRITE)
+        send_command(RequestType::CUSTOM_COMMAND, ["READWRITE"])
       end
     end
   end
